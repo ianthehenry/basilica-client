@@ -9,3 +9,5 @@ pom.xml.asc
 /.nrepl-port
 /out
 *.js
+node_modules/
+bower_components/

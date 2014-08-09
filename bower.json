@@ -1,0 +1,6 @@
+{
+  "name": "Basilica",
+  "dependencies": {
+    "react": "=0.11.1"
+  }
+}
