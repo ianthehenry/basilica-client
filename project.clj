@@ -3,6 +3,7 @@
                  [org.clojure/clojurescript "0.0-2280"]
                  [om "0.7.0"]
                  [org.clojure/core.async "0.1.319.0-6b1aca-alpha"]
+                 [secretary "1.2.0"]
                  ]
   :plugins [[lein-cljsbuild "1.0.3"]]
   :cljsbuild {:builds [{:id "dev"
