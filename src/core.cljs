@@ -14,35 +14,41 @@
 
 (defn thread-component-collapsed [on-click thread]
   (om/component
-    (dom/div nil
-      (dom/h2 nil (thread :content))
-      (dom/button #js {:onClick #(on-click @thread)}
-        "Expand"))
-))
+    (dom/div #js {:className "thread collapsed"}
+      (dom/button #js {:onClick #(on-click @thread)
+                       :className "toggle"}
+        "+")
+      (dom/div #js {:className "content"} (thread :content))
+)))
 
-(defn thread-component-full [thread owner]
+(defn thread-component-expanded [on-click thread owner]
   (reify
-    om/IInitState
-    (init-state [_]
+    om/IInitState (init-state [_]
       {:expanded #{}})
-    om/IRenderState
-    (render-state [_ {:keys [expanded]}]
-      (dom/div nil
-        (dom/h1 nil (thread :content))
+    om/IRenderState (render-state [_ {:keys [expanded]}]
+      (dom/div #js {:className "thread expanded"}
+
+        (if on-click
+          (dom/button #js {:onClick #(on-click @thread)
+                           :className "toggle"}
+            "-"))
+
+        (dom/div #js {:className "content"} (thread :content))
         (apply dom/div #js {:className "children"}
           (dom/textarea #js {:defaultValue "comment"})
           (->> (thread :children)
                (map (fn [child-thread]
-                 (let [on-click (fn [thread]
-                                  (js/console.log thread)
+                 (let [expand   (fn [thread]
                                   (om/update-state! owner [:expanded] #(conj % thread)))
+                       collapse (fn [thread]
+                                  (om/update-state! owner [:expanded] #(disj % thread)))
                        component (if (contains? expanded child-thread)
-                                   thread-component-full
-                                   (partial thread-component-collapsed on-click))]
+                                   (partial thread-component-expanded collapse)
+                                   (partial thread-component-collapsed expand))]
                    (om/build component child-thread)))))
     )))))
 
-(om/root thread-component-full
+(om/root (partial thread-component-expanded nil)
          app-state
          {:path [:root-thread]
           :target (js/document.getElementById "main")})
