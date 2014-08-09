@@ -12,21 +12,35 @@
 
 (defonce app-state (atom {:root-thread {}}))
 
-(defn thread-component-partial [thread]
-  (om/component
-    (dom/h2 nil (thread :content))
-))
-
-
-(defn thread-component-full [thread]
+(defn thread-component-collapsed [on-click thread]
   (om/component
     (dom/div nil
-      (dom/h1 nil (thread :content))
-      (apply dom/div #js {:className "children"}
-        (cons (dom/textarea nil "comment")
-          (map (partial om/build thread-component-partial)
-               (thread :children))))
-)))
+      (dom/h2 nil (thread :content))
+      (dom/button #js {:onClick #(on-click @thread)}
+        "Expand"))
+))
+
+(defn thread-component-full [thread owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:expanded #{}})
+    om/IRenderState
+    (render-state [_ {:keys [expanded]}]
+      (dom/div nil
+        (dom/h1 nil (thread :content))
+        (apply dom/div #js {:className "children"}
+          (dom/textarea #js {:defaultValue "comment"})
+          (->> (thread :children)
+               (map (fn [child-thread]
+                 (let [on-click (fn [thread]
+                                  (js/console.log thread)
+                                  (om/update-state! owner [:expanded] #(conj % thread)))
+                       component (if (contains? expanded child-thread)
+                                   thread-component-full
+                                   (partial thread-component-collapsed on-click))]
+                   (om/build component child-thread)))))
+    )))))
 
 (om/root thread-component-full
          app-state
