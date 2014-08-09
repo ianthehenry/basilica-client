@@ -11,3 +11,4 @@ pom.xml.asc
 *.js
 node_modules/
 bower_components/
+deploy
