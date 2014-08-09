@@ -1,35 +1,51 @@
 (ns basilica.core
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require
-   [clojure.string :as string]
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [goog.net.XhrIo :as xhr]
+   [basilica.net :refer [GET]]
+   [basilica.routes :as routes]
    [cljs.core.async :as async :refer [chan close!]]
    ))
 
 (enable-console-print!)
 
-(defonce app-state (atom {:threads []}))
+(defonce app-state (atom {:root-thread {}}))
 
-(defn thread-component [thread]
+(defn thread-component-partial [thread]
   (om/component
-    (dom/li nil (get thread "title"))))
+    (dom/h2 nil (thread :content))
+))
 
-(defn app-component [app-state]
-  (apply dom/ul nil (map (partial om/build thread-component) (app-state :threads))))
 
-(om/root app-component
+(defn thread-component-full [thread]
+  (om/component
+    (dom/div nil
+      (dom/h1 nil (thread :content))
+      (apply dom/div #js {:className "children"}
+        (cons (dom/textarea nil "comment")
+          (map (partial om/build thread-component-partial)
+               (thread :children))))
+)))
+
+(om/root thread-component-full
          app-state
-         {:target (js/document.getElementById "main")})
+         {:path [:root-thread]
+          :target (js/document.getElementById "main")})
 
-(defn GET [url]
-  (let [ch (chan 1)]
-    (xhr/send url (fn [event]
-                    (let [res (-> event .-target .getResponseJson js->clj)]
-                      (go (>! ch res)
-                          (close! ch)))))
-    ch))
-
-(go (let [res (<! (GET "http://localhost:3000/threads"))]
+#_ (go (let [res (<! (GET "http://localhost:3000/threads"))]
   (swap! app-state assoc :threads res)))
+
+(swap! app-state assoc :root-thread {
+  :id "basilica", :content "Basilica", :children [
+    { :id "name-or-something", :content "This is a title", :children [
+      { :id "a", :children [], :content "This is a comment" }
+      { :id "b", :children [], :content "another comment?" }
+      { :id "c", :children [], :content "I DISAGREE" }
+    ]}
+    { :id "haskell", :content "A safe place for haskell talk", :children [
+      { :id "a", :children [], :content "A haskell thing" }
+      { :id "b", :children [], :content "Monads??" }
+      { :id "c", :children [], :content "Words about programming" }
+    ]}
+]})
