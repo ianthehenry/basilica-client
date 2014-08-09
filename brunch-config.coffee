@@ -10,3 +10,11 @@ exports.config =
         'vendor.js': /^bower_components/
     stylesheets:
       joinTo: 'main.css'
+  overrides:
+    production:
+      assets: /static-prod/
+      plugins: autoreload: enabled: false
+      optimize: true
+      paths:
+        public: 'out/prod'
+        watched: ['styles', 'static-prod']

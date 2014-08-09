@@ -5,7 +5,7 @@
                  [org.clojure/core.async "0.1.319.0-6b1aca-alpha"]
                  [secretary "1.2.0"]
                  ]
-  :plugins [[lein-cljsbuild "1.0.3"]]
+  :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src"]
                         :compiler {:output-to "out/dev/main.js"
@@ -18,4 +18,8 @@
                                    :output-dir "out/prod"
                                    :optimizations :advanced
                                    :pretty-print false
-                                   :source-map "out/prod/main.js.map"}}]})
+                                   :output-wrapper false
+                                   :preamble ["react/react.min.js"]
+                                   :externs ["react/react.js"]
+                                   :closure-warnings {:externs-validation :off
+                                                      :non-standard-jsdoc :off}}}]})
