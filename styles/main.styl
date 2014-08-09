@@ -1,0 +1,57 @@
+* {
+  margin: 0
+  padding: 0
+  box-sizing: border-box
+}
+
+button-color = #ccc
+line-height = 20px
+font = 13pt Helvetica
+
+body {
+  padding: line-height
+}
+
+body, textarea {
+  line-height: line-height
+  font: font
+}
+
+.thread {
+  > .content {
+  }
+
+  > button.toggle {
+    border: none
+    width: line-height
+    height: line-height
+    font: 15px Menlo
+    background-color: button-color
+    float: left
+    margin-left: -1 * line-height
+
+    &:active {
+      outline: none
+      background-color: darken(button-color, 20%)
+    }
+  }
+
+  > .children {
+    > textarea {
+      width: 100%
+      min-height: line-height * 3
+    }
+    margin-left: line-height
+    .thread {
+      margin-top: line-height * 0.5
+    }
+  }
+
+  &.expanded > button.toggle::before {
+    content: "-"
+  }
+
+  &.collapsed > button.toggle::before {
+    content: "+"
+  }
+}
