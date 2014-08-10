@@ -13,10 +13,11 @@
 
 (defonce app-state (atom {:root-thread {}}))
 
-(defn toggle-button [on-click cursor]
+(defn link-button [on-click cursor text]
   (if on-click
-    (dom/button #js {:onClick #(on-click @cursor)
-                     :className "toggle"})))
+    (dom/a #js {:href "#"
+                :className "button"
+                :onClick #(do (on-click @cursor) false)} text)))
 
 (defn classes [& all]
   (clj->js {:className (string/join " " all)}))
@@ -24,49 +25,70 @@
 (defn comment-component [on-submit owner]
   (reify
     om/IInitState (init-state [_] {:text ""})
-    om/IDidMount (did-mount [_] (.focus (om/get-node owner)))
+    om/IDidMount (did-mount [_] (.focus (om/get-node owner "input")))
     om/IRenderState (render-state [_ {:keys [text]}]
-      (dom/textarea #js {:value text
-                         :placeholder "comment..."
-                         :onChange #(om/set-state! owner :text (.. % -target -value))
-                         :onKeyDown (fn [e]
-                           (when (and (= (. e -which) 13)
-                                      (. e -metaKey))
-                             (on-submit text)
-                             (om/set-state! owner :text "")))
-                        }
-))))
+      (dom/div (classes "comment")
+        "enter for newline, cmd-enter to submit, markdown coming eventually"
+        (dom/textarea #js {:value text
+                           :ref "input"
+                           :onChange #(om/set-state! owner :text (.. % -target -value))
+                           :onKeyDown (fn [e]
+                             (when (and (= (. e -which) 13)
+                                        (. e -metaKey))
+                               (on-submit text)
+                               (om/set-state! owner :text "")))
+                          }))
+)))
 
-(defn thread-component [on-click expanded thread owner]
+(defn thread-header-component [url thread]
+  (om/component
+    (dom/div (classes "header")
+      "ian"
+      " "
+      "15 minutes ago"
+      " "
+      (dom/a #js {:href url} "link")
+)))
+
+(defn thread-body-component [on-click thread]
+  (om/component
+    (dom/div (classes "content")
+             (thread :content)
+             " "
+             (let [child-count (-> thread :children count)
+                   text (if (= child-count 0) "comment" (str child-count " comments" ))]
+               (link-button on-click thread text)))
+))
+
+(declare thread-component)
+
+(defn thread-children-component [on-comment build-child threads]
+  (om/component
+    (apply dom/div (classes "children")
+           (if on-comment (om/build comment-component on-comment))
+           (map build-child threads))))
+
+(defn thread-component [on-click expanded prefix thread owner]
   (reify
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
-      (dom/div (classes "thread" (if expanded "expanded" "collapsed"))
-        (if (or expanded (-> thread :children count (> 0)))
-          (toggle-button on-click thread))
+      (let [show-toggle-button (or expanded (-> thread :children count (> 0)))
+            my-url (string/join "/" [prefix (thread :id)])]
+        (apply dom/div (classes "thread" (if expanded "expanded" "collapsed"))
+          (om/build (partial thread-header-component my-url) thread)
+          (om/build (partial thread-body-component on-click) thread)
+          (if expanded [
+            (om/build (partial thread-children-component print
+             (fn [child-thread]
+              (let [click (fn [op] (fn [thread] (om/update-state! owner :expanded-children #(op % thread))))
+                    component (if (contains? expanded-children child-thread)
+                                (partial thread-component (click disj) true my-url)
+                                (partial thread-component (click conj) false my-url))]
+                (om/build component child-thread))))
+              (thread :children))])
+)))))
 
-        (let [reply-button (if expanded
-                             []
-                             [" " (dom/a #js {:href "#"
-                                              :className "reply-button"
-                                              :onClick #(on-click @thread)} "reply")])]
-          (apply dom/div (classes "content")
-                         (thread :content)
-                         reply-button))
-
-        (if expanded
-          (apply dom/div (classes "children")
-            (om/build comment-component print)
-            (->> (thread :children)
-                 (map (fn [child-thread]
-                   (let [click (fn [op] (fn [thread] (om/update-state! owner :expanded-children #(op % thread))))
-                         component (if (contains? expanded-children child-thread)
-                                     (partial thread-component (click disj) true)
-                                     (partial thread-component (click conj) false))]
-                     (om/build component child-thread)))))))
-))))
-
-(om/root (partial thread-component nil true)
+(om/root (partial thread-component nil true "")
          app-state
          {:path [:root-thread]
           :target (js/document.getElementById "main")})

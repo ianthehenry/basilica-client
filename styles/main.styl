@@ -1,57 +1,47 @@
-* {
+*
   margin: 0
   padding: 0
   box-sizing: border-box
-}
 
 button-color = #ccc
 line-height = 20px
 font = 13pt Helvetica
+spacing = line-height * 0.5
+indent-size = spacing
 
-body {
+body
   padding: line-height
-}
 
-body, textarea {
+body, textarea
   line-height: line-height
   font: font
-}
 
-.thread {
-  > .content {
-  }
+quiet()
+  color: #888
+  font: 10pt Helvetica
 
-  > button.toggle {
-    border: none
-    width: line-height
-    height: line-height
-    font: 15px Menlo
-    background-color: button-color
-    float: left
-    margin-left: -1 * line-height
+textarea
+  width: 100%
+  height: line-height * 3
+  outline: none
+  padding: line-height * 0.25
+  box-sizing: border-box
 
-    &:active {
-      outline: none
-      background-color: darken(button-color, 20%)
-    }
-  }
+.comment
+  quiet()
 
-  > .children {
-    > textarea {
-      width: 100%
-      min-height: line-height * 3
-    }
-    margin-left: line-height
-    .thread {
-      margin-top: line-height * 0.5
-    }
-  }
+.thread
+  > .header
+    quiet()
+    > a
+      color: #888
 
-  &.expanded > button.toggle::before {
-    content: "-"
-  }
+  > .content
+    a.button
+      quiet()
 
-  &.collapsed > button.toggle::before {
-    content: "+"
-  }
-}
+  > .children
+    background-color: rgba(0, 0, 0, 0.1)
+    padding: indent-size
+    .thread:not(:first-child)
+      margin-top: spacing
