@@ -42,8 +42,18 @@
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
       (dom/div (classes "thread" (if expanded "expanded" "collapsed"))
-        (toggle-button on-click thread)
-        (dom/div (classes "content") (thread :content))
+        (if (or expanded (-> thread :children count (> 0)))
+          (toggle-button on-click thread))
+
+        (let [reply-button (if expanded
+                             []
+                             [" " (dom/a #js {:href "#"
+                                              :className "reply-button"
+                                              :onClick #(on-click @thread)} "reply")])]
+          (apply dom/div (classes "content")
+                         (thread :content)
+                         reply-button))
+
         (if expanded
           (apply dom/div (classes "children")
             (om/build comment-component print)
