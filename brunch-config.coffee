@@ -3,7 +3,7 @@ exports.config =
     assets: /static/
   paths:
     public: 'out/dev'
-    watched: ['styles', 'static']
+    watched: ['styles', 'static-dev']
   files:
     javascripts:
       joinTo:
