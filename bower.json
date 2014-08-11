@@ -1,6 +1,7 @@
 {
   "name": "Basilica",
   "dependencies": {
+    "momentjs": "=2.8.1",
     "react": "=0.11.1"
   }
 }

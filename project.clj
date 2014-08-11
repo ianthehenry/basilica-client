@@ -19,7 +19,7 @@
                                    :optimizations :advanced
                                    :pretty-print false
                                    :output-wrapper false
-                                   :preamble ["react/react.min.js"]
-                                   :externs ["react/react.js"]
+                                   :preamble ["react/react.min.js" "momentjs/min/moment.min.js"]
+                                   :externs ["react/react.js" "momentjs/moment.js"]
                                    :closure-warnings {:externs-validation :off
                                                       :non-standard-jsdoc :off}}}]})
