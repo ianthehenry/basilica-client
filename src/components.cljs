@@ -43,14 +43,14 @@
         "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
         (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
 
-(defn thread-header-component [url thread]
+(defn thread-header-component [thread]
   (om/component
     (dom/div (classes "header")
       (thread :by)
       " "
       (format (thread :at))
       " "
-      (dom/a #js {:href url} "link")
+      (dom/a #js {:href (string/join "/" (thread :id))} "link")
 )))
 
 (defn thread-body-component [on-click thread]
@@ -71,22 +71,21 @@
            (if on-comment (om/build comment-component on-comment))
            (map build-child threads))))
 
-(defn thread-component [comment-ch on-click expanded prefix thread owner]
+(defn thread-component [comment-ch on-click expanded thread owner]
   (reify
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
-      (let [show-toggle-button (or expanded (-> thread :children count (> 0)))
-            my-url (string/join "/" [prefix (thread :id)])]
+      (let [show-toggle-button (or expanded (-> thread :children count (> 0)))]
         (apply dom/div (classes "thread" (if expanded "expanded" "collapsed"))
-          (om/build (partial thread-header-component my-url) thread)
+          (om/build thread-header-component thread)
           (om/build (partial thread-body-component on-click) thread)
           (if expanded [
             (om/build (partial thread-children-component #(put! comment-ch {:thread @thread, :text %})
              (fn [child-thread]
               (let [click (fn [op] (fn [thread] (om/update-state! owner :expanded-children #(op % thread))))
                     component (if (contains? expanded-children child-thread)
-                                (partial thread-component comment-ch (click disj) true my-url)
-                                (partial thread-component comment-ch (click conj) false my-url))]
+                                (partial thread-component comment-ch (click disj) true)
+                                (partial thread-component comment-ch (click conj) false))]
                 (om/build component child-thread))))
               (thread :children))])
 )))))

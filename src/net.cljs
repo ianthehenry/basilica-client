@@ -13,7 +13,9 @@
         (let [res (-> event .-target .getResponseJson js->clj keywordize-keys)]
           (go (>! ch res)
               (close! ch)))
-        (print "Error!")))))
+        (do
+          (print "Error!")
+          (close! ch))))))
 
 (defn request
   ([method url] (request method url nil))
