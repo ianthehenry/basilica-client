@@ -4,7 +4,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
-   [cljs.core.async :as async :refer [chan close!]]
+   [cljs.core.async :as async :refer [chan close! put!]]
 ))
 
 (defn link-button [on-click cursor text]
@@ -22,28 +22,26 @@
   (let [height (.-clientHeight el)]
     (set! (.. el -style -height) (str (+ height delta) "px"))))
 
+(defn key-down [on-submit]
+  (fn [e]
+    (let [node (. e -target)
+          key (. e -which)
+          command (or (. e -metaKey) (. e -ctrlKey))
+          bump-amount 40]
+    (when command
+      (when (= key 74) (bump-height node bump-amount))
+      (when (= key 75) (bump-height node (- bump-amount)))
+      (when (= key 13)
+        (on-submit (. node -value))
+        (set! (. node -value) ""))))))
+
 (defn comment-component [on-submit owner]
   (reify
-    om/IInitState (init-state [_] {:text ""})
     om/IDidMount (did-mount [_] (.focus (om/get-node owner "input")))
-    om/IRenderState (render-state [_ {:keys [text]}]
+    om/IRender (render [_]
       (dom/div (classes "comment")
         "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
-        (dom/textarea #js {:value text
-                           :ref "input"
-                           :onChange #(om/set-state! owner :text (.. % -target -value))
-                           :onKeyDown (fn [e]
-                             (let [key (. e -which)
-                                   command (or (. e -metaKey) (. e -ctrlKey))
-                                   bump-amount 40]
-                               (when command
-                                 (when (= key 74) (bump-height (om/get-node owner "input") bump-amount))
-                                 (when (= key 75) (bump-height (om/get-node owner "input") (- bump-amount)))
-                                 (when (= key 13)
-                                   (on-submit text)
-                                   (om/set-state! owner :text "")))))
-                          }))
-)))
+        (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
 
 (defn thread-header-component [url thread]
   (om/component
@@ -73,7 +71,7 @@
            (if on-comment (om/build comment-component on-comment))
            (map build-child threads))))
 
-(defn thread-component [on-click expanded prefix thread owner]
+(defn thread-component [comment-ch on-click expanded prefix thread owner]
   (reify
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
@@ -83,12 +81,12 @@
           (om/build (partial thread-header-component my-url) thread)
           (om/build (partial thread-body-component on-click) thread)
           (if expanded [
-            (om/build (partial thread-children-component print
+            (om/build (partial thread-children-component #(put! comment-ch {:thread @thread, :text %})
              (fn [child-thread]
               (let [click (fn [op] (fn [thread] (om/update-state! owner :expanded-children #(op % thread))))
                     component (if (contains? expanded-children child-thread)
-                                (partial thread-component (click disj) true my-url)
-                                (partial thread-component (click conj) false my-url))]
+                                (partial thread-component comment-ch (click disj) true my-url)
+                                (partial thread-component comment-ch (click conj) false my-url))]
                 (om/build component child-thread))))
               (thread :children))])
 )))))

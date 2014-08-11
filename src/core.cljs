@@ -1,10 +1,10 @@
 (ns basilica.core
-  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
-   [basilica.net :refer [GET]]
+   [basilica.net :refer [GET connect! POST]]
    [basilica.components :as components]
    [cljs.core.async :as async :refer [chan close!]]
    [secretary.core :as secretary :include-macros true :refer [defroute]]
@@ -42,10 +42,27 @@
     { :id "new-story", :by "aaron", :content "what is this thing", :at "2014-08-11T01:26:03.436Z", :children [] }
 ]}}))
 
-(om/root (partial components/thread-component nil true "")
+(defonce comment-ch (chan))
+
+(om/root (partial components/thread-component comment-ch identity true "")
          app-state
          {:path [:root-thread]
           :target (js/document.getElementById "main")})
+
+(defn form-data [kvps]
+  (string/join "&" (map (partial string/join "=") kvps)))
+
+(go-loop []
+  (when-let [{:keys [text thread]} (<! comment-ch)]
+    (let [data (form-data [["username" "ian"] ["title" text]])
+          res (<! (POST "http://localhost:3000/threads" data))]
+      (print res))
+    (recur)))
+
+(go-loop [ws (<! (connect! "ws://localhost:3000"))]
+  (when-let [value (<! (ws :in))]
+    (print value)
+    (recur ws)))
 
 #_ (go (let [res (<! (GET "http://localhost:3000/threads"))]
   (swap! app-state assoc :threads res)))
