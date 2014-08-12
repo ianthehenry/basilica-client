@@ -15,8 +15,11 @@
 (defn format [timestamp-string]
   (.fromNow (js/moment timestamp-string)))
 
+(defn with-classes [keys & all]
+  (clj->js (into keys {:className (string/join " " all)})))
+
 (defn classes [& all]
-  (clj->js {:className (string/join " " all)}))
+  (apply with-classes {} all))
 
 (defn bump-height [el delta]
   (let [height (.-clientHeight el)]
@@ -76,7 +79,8 @@
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
       (let [show-toggle-button (or expanded (-> thread :children count (> 0)))]
-        (apply dom/div (classes "thread" (if expanded "expanded" "collapsed"))
+        (apply dom/div (with-classes {:key (-> thread :id last)}
+                                     "thread" (if expanded "expanded" "collapsed"))
           (om/build thread-header-component thread)
           (om/build (partial thread-body-component on-click) thread)
           (if expanded [
