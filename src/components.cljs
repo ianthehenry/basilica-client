@@ -74,22 +74,25 @@
            (if on-comment (om/build comment-component on-comment))
            (map build-child threads))))
 
+(defn rel-id [thread] (-> thread :id last))
+
 (defn thread-component [comment-ch on-click expanded thread owner]
   (reify
     om/IInitState (init-state [_] {:expanded-children #{}})
     om/IRenderState (render-state [_ {:keys [expanded-children]}]
-      (let [show-toggle-button (or expanded (-> thread :children count (> 0)))]
-        (apply dom/div (with-classes {:key (-> thread :id last)}
-                                     "thread" (if expanded "expanded" "collapsed"))
-          (om/build thread-header-component thread)
-          (om/build (partial thread-body-component on-click) thread)
-          (if expanded [
-            (om/build (partial thread-children-component #(put! comment-ch {:thread @thread, :text %})
-             (fn [child-thread]
-              (let [click (fn [op] (fn [thread] (om/update-state! owner :expanded-children #(op % thread))))
-                    component (if (contains? expanded-children child-thread)
-                                (partial thread-component comment-ch (click disj) true)
-                                (partial thread-component comment-ch (click conj) false))]
-                (om/build component child-thread))))
-              (thread :children))])
-)))))
+      (apply dom/div (with-classes {:key (rel-id thread)} "thread" (if expanded "expanded" "collapsed"))
+        (om/build thread-header-component thread)
+        (om/build (partial thread-body-component on-click) thread)
+        (if expanded [
+          (om/build (partial thread-children-component #(put! comment-ch {:thread @thread, :text %})
+           (fn [child-thread]
+            (let [click (fn [op] (fn [thread]
+                          (om/update-state! owner
+                                            :expanded-children
+                                            #(op % (rel-id thread)))))
+                  component (if (contains? expanded-children (rel-id child-thread))
+                              (partial thread-component comment-ch (click disj) true)
+                              (partial thread-component comment-ch (click conj) false))]
+              (om/build component child-thread))))
+            (thread :children))]))
+)))
