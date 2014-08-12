@@ -12,6 +12,8 @@
    [goog.history.EventType :as EventType]
 ) (:import goog.history.Html5History))
 
+(enable-console-print!)
+
 (defn path-from [s]
   (remove #(= "" %) (string/split s #"/")))
 
@@ -23,8 +25,6 @@
   (doto h (.setUseFragment false)
           (.setPathPrefix "/basilica/")
           (.setEnabled true)))
-
-(enable-console-print!)
 
 (defonce app-state (atom {:root-thread {
   :id [], :by "ian", :content "Basilica", :at "2014-08-11T01:16:44.421Z", :children [
@@ -62,9 +62,37 @@
       (print res))
     (recur)))
 
+(defn index-where [f v]
+  (loop [i 0]
+    (when (< i (count v))
+      (if (f (v i))
+        i
+        (recur (+ 1 i))))))
+
+(defn id-path-to-clj-path [thread id-path]
+  (if (= id-path [])
+    []
+    (let [head (first id-path) tail (rest id-path)
+          ix (index-where #(= (-> % :id last) head) (thread :children))
+          clj-path [:children ix]]
+      (when ix
+        (concat clj-path (id-path-to-clj-path (get-in thread clj-path) tail))))))
+
+(defn prepend [coll item]
+  (vec (cons item coll)))
+
+(defn add-thread [state thread]
+  (let [parent-path (vec (-> thread :id butlast))
+        root (state :root-thread)
+        path (id-path-to-clj-path root parent-path)]
+    (if-not (nil? path)
+      (update-in state (cons :root-thread path)
+        #(update-in % [:children] prepend thread))
+      (do (print "ignoring a delta") state))))
+
 (go-loop [ws (<! (connect! "ws://localhost:3000"))]
   (when-let [value (<! (ws :in))]
-    (print value)
+    (swap! app-state add-thread value)
     (recur ws)))
 
 #_ (go (let [res (<! (GET "http://localhost:3000/threads"))]
