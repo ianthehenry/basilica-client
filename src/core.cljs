@@ -11,8 +11,8 @@
    [cljs.core.async :as async :refer [chan close!]]
    [secretary.core :as secretary :include-macros true :refer [defroute]]
    [goog.events :as events]
-   [goog.history.EventType :as EventType]
-) (:import goog.history.Html5History))
+   [goog.history.EventType :as EventType])
+  (:import goog.history.Html5History))
 
 (enable-console-print!)
 
@@ -25,20 +25,20 @@
 (let [h (Html5History.)]
   (events/listen h EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
   (doto h (.setUseFragment false)
-          (.setPathPrefix "/basilica/")
-          (.setEnabled true)))
+    (.setPathPrefix "/basilica/")
+    (.setEnabled true)))
 
-(defonce app-state (atom {:threads #{}}))
+(defonce app-state (atom {:threads #{}
+                          :loaded false}))
 
 (defonce comment-ch (chan))
 
 (defn app-component [app-state owner]
   (om/component
-   (let [threads (app-state :threads)]
-     (if (= 0 (count (app-state :threads)))
-       (dom/div nil "Loading...")
-       (om/build components/root-thread-component threads)
-       ))))
+   (if (app-state :loaded)
+     (om/build components/root-thread-component
+               (app-state :threads))
+     (dom/div nil "Loading..."))))
 
 (om/root app-component
          app-state
@@ -89,9 +89,10 @@
                #(-> % (conj thread) update-parent))))
 
 (go-loop [ws (<! (connect! (str conf/ws-base "/")))]
-  (when-let [value (<! (ws :in))]
-    (swap! app-state add-thread value)
-    (recur ws)))
+         (when-let [value (<! (ws :in))]
+           (swap! app-state add-thread value)
+           (recur ws)))
 
-(go (let [res (<! (GET (str conf/api-base "/threads")))]
-  (swap! app-state assoc :threads (apply hash-set res))))
+(go (when-let [res (<! (GET (str conf/api-base "/threads")))]
+      (swap! app-state assoc :threads (apply hash-set res))
+      (swap! app-state assoc :loaded true)))
