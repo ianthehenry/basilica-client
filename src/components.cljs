@@ -67,10 +67,16 @@
                  text (if (= child-count 0) "comment" (str child-count " comments" ))]
              (link-button on-click text))))
 
-(defn render-thread-children [on-comment build-child threads]
-  (apply dom/div (classes "children")
-         (om/build comment-component on-comment)
-         (map build-child threads)))
+(declare thread-component)
+
+(defn render-thread-children [on-comment children all-threads]
+  (let [build-child (fn [{id-child :id}]
+                      (om/build thread-component
+                                [id-child all-threads]
+                                {:react-key id-child}))]
+    (apply dom/div (classes "children")
+           (om/build comment-component on-comment)
+           (map build-child children))))
 
 (defn thread-component [[id-thread threads] owner]
   (reify
@@ -89,10 +95,7 @@
                 (render-thread-header thread)
                 (render-thread-body #(om/update-state! owner :expanded not) thread)
                 (if expanded
-                  (let [build-child (fn [{id-child :id}]
-                                      (om/build thread-component [id-child threads] {:react-key id-child}))]
-                    (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
-                                            build-child
-                                            children)
-                    ))))
-     )))
+                  (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
+                                          children
+                                          threads)))
+     ))))
