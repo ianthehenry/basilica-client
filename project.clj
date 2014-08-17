@@ -7,13 +7,13 @@
                  ]
   :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src"]
+                        :source-paths ["src" "conf/dev"]
                         :compiler {:output-to "out/dev/main.js"
                                    :output-dir "out/dev"
                                    :optimizations :none
                                    :source-map "out/dev/main.js.map"}}
                        {:id "prod"
-                        :source-paths ["src"]
+                        :source-paths ["src" "conf/prod"]
                         :compiler {:output-to "out/prod/main.js"
                                    :output-dir "out/prod"
                                    :optimizations :advanced

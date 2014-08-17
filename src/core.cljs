@@ -4,6 +4,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
+   [basilica.conf :as conf]
    [basilica.net :refer [GET connect! POST]]
    [basilica.components :as components]
    [clojure.set :refer [select]]
@@ -55,7 +56,7 @@
   (when-let [{:keys [text thread]} (<! comment-ch)]
     (let [data (form-data [["by" "ian"]
                            ["content" text]])
-          path (str "http://localhost:3000/threads/" (thread :id))
+          path (str conf/http-base "/threads/" (thread :id))
           res (<! (POST path data))]
       (print res))
     (recur)))
@@ -80,10 +81,10 @@
                   (update-set (parent-of-pred thread)
                               inc-child-count))))
 
-(go-loop [ws (<! (connect! "ws://localhost:3000"))]
+(go-loop [ws (<! (connect! (str conf/ws-base "/")))]
   (when-let [value (<! (ws :in))]
     (swap! app-state add-thread value)
     (recur ws)))
 
-#_ (go (let [res (<! (GET "http://localhost:3000/threads"))]
+#_ (go (let [res (<! (GET (str conf/http-base "/threads")))]
   (swap! app-state assoc :threads res)))

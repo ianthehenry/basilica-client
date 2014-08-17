@@ -1,9 +1,9 @@
 exports.config =
   conventions:
-    assets: /static/
+    assets: /^static\/dev/
   paths:
     public: 'out/dev'
-    watched: ['styles', 'static-dev']
+    watched: ['styles', 'static/dev']
   files:
     javascripts:
       joinTo:
@@ -12,9 +12,10 @@ exports.config =
       joinTo: 'main.css'
   overrides:
     production:
-      assets: /static-prod/
+      conventions:
+        assets: /^static\/prod/
       plugins: autoreload: enabled: false
       optimize: true
       paths:
         public: 'out/prod'
-        watched: ['styles', 'static-prod']
+        watched: ['styles', 'static/prod']
