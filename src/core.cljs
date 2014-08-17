@@ -55,7 +55,7 @@
   (when-let [{:keys [text thread]} (<! comment-ch)]
     (let [data (form-data [["by" "anon"]
                            ["content" text]])
-          path (str conf/http-base "/threads/" (thread :id))
+          path (str conf/api-base "/threads/" (thread :id))
           res (<! (POST path data))]
       (print res))
     (recur)))
@@ -85,5 +85,5 @@
     (swap! app-state add-thread value)
     (recur ws)))
 
-(go (let [res (<! (GET (str conf/http-base "/threads")))]
+(go (let [res (<! (GET (str conf/api-base "/threads")))]
   (swap! app-state assoc :threads (apply hash-set res))))

@@ -3,6 +3,7 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
+   [basilica.conf :as conf]
    [clojure.string :as string]
    [clojure.set :refer [select]]
    [cljs.core.async :as async :refer [chan close! put!]]))
@@ -50,15 +51,15 @@
               "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
               (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
 
-(defn thread-header-component [thread]
+(defn render-thread-header [thread]
   (dom/div (classes "header")
            (thread :by)
            " "
            (format (thread :at))
            " "
-           (dom/a #js {:href (str "/" (thread :id))} "link")))
+           (dom/a #js {:href (str conf/site-base "/" (thread :id))} "link")))
 
-(defn thread-body-component [on-click thread]
+(defn render-thread-body [on-click thread]
   (dom/div (classes "content")
            (thread :content)
            " "
@@ -66,7 +67,7 @@
                  text (if (= child-count 0) "comment" (str child-count " comments" ))]
              (link-button on-click text))))
 
-(defn thread-children-component [on-comment build-child threads]
+(defn render-thread-children [on-comment build-child threads]
   (apply dom/div (classes "children")
          (om/build comment-component on-comment)
          (map build-child threads)))
@@ -85,13 +86,13 @@
                          (select #(= (% :idParent) id-thread))
                          (sort-by :id >))]
        (dom/div (classes "thread" (if expanded "expanded" "collapsed"))
-                (thread-header-component thread)
-                (thread-body-component #(om/update-state! owner :expanded not) thread)
+                (render-thread-header thread)
+                (render-thread-body #(om/update-state! owner :expanded not) thread)
                 (if expanded
                   (let [build-child (fn [{id-child :id}]
                                       (om/build thread-component [id-child threads] {:react-key id-child}))]
-                    (thread-children-component #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
-                                               build-child
-                                               children)
+                    (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
+                                            build-child
+                                            children)
                     ))))
      )))
