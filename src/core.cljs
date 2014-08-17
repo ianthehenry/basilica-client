@@ -37,8 +37,7 @@
    (let [threads (app-state :threads)]
      (if (= 0 (count (app-state :threads)))
        (dom/div nil "Loading...")
-       (om/build components/thread-component threads {:init-state {:expanded true}
-                                                      :opts {:id-thread 0}})
+       (om/build components/thread-component [0 threads] {:init-state {:expanded true}})
        ))))
 
 (om/root app-component

@@ -71,7 +71,7 @@
          (om/build comment-component on-comment)
          (map build-child threads)))
 
-(defn thread-component [threads owner {:keys [id-thread]}]
+(defn thread-component [[id-thread threads] owner]
   (reify
     om/IInitState
     (init-state [_] {:expanded false})
@@ -84,12 +84,12 @@
            children (->> threads
                          (select #(= (% :idParent) id-thread))
                          (sort-by :id >))]
-       (dom/div (with-classes {:key id-thread} "thread" (if expanded "expanded" "collapsed"))
+       (dom/div (classes "thread" (if expanded "expanded" "collapsed"))
                 (thread-header-component thread)
                 (thread-body-component #(om/update-state! owner :expanded not) thread)
                 (if expanded
                   (let [build-child (fn [{id-child :id}]
-                                      (om/build thread-component threads {:opts {:id-thread id-child}}))]
+                                      (om/build thread-component [id-child threads] {:react-key id-child}))]
                     (thread-children-component #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
                                                build-child
                                                children)
