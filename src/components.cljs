@@ -4,13 +4,14 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
-   [cljs.core.async :as async :refer [chan close! put!]]
-))
+   [clojure.set :refer [select]]
+   [cljs.core.async :as async :refer [chan close! put!]]))
 
-(defn link-button [on-click cursor text]
+(defn link-button [on-click text]
   (dom/a #js {:href "#"
               :className "button"
-              :onClick #(do (on-click @cursor) false)} text))
+              :onClick #(do (on-click) false)}
+         text))
 
 (defn format [timestamp-string]
   (.fromNow (js/moment timestamp-string)))
@@ -31,68 +32,73 @@
           key (. e -which)
           command (or (. e -metaKey) (. e -ctrlKey))
           bump-amount 40]
-    (when command
-      (when (= key 74) (bump-height node bump-amount))
-      (when (= key 75) (bump-height node (- bump-amount)))
-      (when (= key 13)
-        (on-submit (. node -value))
-        (set! (. node -value) ""))))))
+      (when command
+        (when (= key 74) (bump-height node bump-amount))
+        (when (= key 75) (bump-height node (- bump-amount)))
+        (when (= key 13)
+          (on-submit (. node -value))
+          (set! (. node -value) ""))))))
 
 (defn comment-component [on-submit owner]
   (reify
-    om/IDidMount (did-mount [_] (.focus (om/get-node owner "input")))
-    om/IRender (render [_]
-      (dom/div (classes "comment")
-        "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
-        (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
+    om/IDidMount
+    (did-mount [_] (.focus (om/get-node owner "input")))
+    om/IRender
+    (render
+     [_]
+     (dom/div (classes "comment")
+              "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
+              (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
 
 (defn thread-header-component [thread]
-  (om/component
-    (dom/div (classes "header")
-      (thread :by)
-      " "
-      (format (thread :at))
-      " "
-      (dom/a #js {:href (string/join "/" (thread :id))} "link")
-)))
+  (dom/div (classes "header")
+           (thread :by)
+           " "
+           (format (thread :at))
+           " "
+           (dom/a #js {:href (str "/" (thread :id))} "link")))
 
 (defn thread-body-component [on-click thread]
-  (om/component
-    (dom/div (classes "content")
-             (thread :content)
-             " "
-             (let [child-count (-> thread :children count)
-                   text (if (= child-count 0) "comment" (str child-count " comments" ))]
-               (link-button on-click thread text)))
-))
-
-(declare thread-component)
+  (dom/div (classes "content")
+           (thread :content)
+           " "
+           (let [child-count (thread :count)
+                 text (if (= child-count 0) "comment" (str child-count " comments" ))]
+             (link-button (partial on-click thread) text))))
 
 (defn thread-children-component [on-comment build-child threads]
-  (om/component
-    (apply dom/div (classes "children")
-           (if on-comment (om/build comment-component on-comment))
-           (map build-child threads))))
+  (apply dom/div (classes "children")
+         (om/build comment-component on-comment)
+         (map build-child threads)))
 
-(defn rel-id [thread] (-> thread :id last))
-
-(defn thread-component [comment-ch on-click expanded thread owner]
+(defn thread-component [comment-ch on-click expanded id-thread threads owner]
   (reify
-    om/IInitState (init-state [_] {:expanded-children #{}})
-    om/IRenderState (render-state [_ {:keys [expanded-children]}]
-      (apply dom/div (with-classes {:key (rel-id thread)} "thread" (if expanded "expanded" "collapsed"))
-        (om/build thread-header-component thread)
-        (om/build (partial thread-body-component on-click) thread)
-        (if expanded [
-          (om/build (partial thread-children-component #(put! comment-ch {:thread @thread, :text %})
-           (fn [child-thread]
-            (let [click (fn [op] (fn [thread]
-                          (om/update-state! owner
-                                            :expanded-children
-                                            #(op % (rel-id thread)))))
-                  component (if (contains? expanded-children (rel-id child-thread))
-                              (partial thread-component comment-ch (click disj) true)
-                              (partial thread-component comment-ch (click conj) false))]
-              (om/build component child-thread))))
-            (thread :children))]))
-)))
+    om/IInitState
+    (init-state [_] {:expanded-children #{}})
+    om/IRenderState
+    (render-state
+     [_ {:keys [expanded-children]}]
+     (let [thread (->> threads
+                       (select #(= (% :id) id-thread))
+                       first)
+           children (->> threads
+                         (select #(= (% :idParent) id-thread))
+                         (sort-by :id >))]
+       (dom/div (with-classes {:key id-thread} "thread" (if expanded "expanded" "collapsed"))
+                (thread-header-component thread)
+                (thread-body-component on-click thread)
+                (if expanded
+                  (let [click (fn [op] (fn [thread]
+                                         (om/update-state! owner
+                                                           :expanded-children
+                                                           #(op % (thread :id)))))
+                        build-child (fn [{id-child :id}]
+                                      (om/build (if (contains? expanded-children id-child)
+                                                  (partial thread-component comment-ch (click disj) true id-child)
+                                                  (partial thread-component comment-ch (click conj) false id-child))
+                                                threads))]
+                    (thread-children-component #(put! comment-ch {:thread thread, :text %})
+                                               build-child
+                                               children)
+                    ))))
+     )))
