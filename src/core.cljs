@@ -28,26 +28,21 @@
           (.setPathPrefix "/basilica/")
           (.setEnabled true)))
 
-(defonce app-state (atom {:threads #{
-  { :id 0, :count 3, :by "ian", :content "Basilica", :at "2014-08-11T01:16:44.421Z"}
-  { :id 1, :idParent 0, :count 3, :by "ian", :content "This is a title", :at "2014-08-11T01:16:44.421Z" }
-  { :id 2, :idParent 1, :count 0, :by "ian", :content "This is a comment", :at "2014-08-11T01:16:44.421Z" }
-  { :id 3, :idParent 1, :count 0, :by "ian", :content "another comment?", :at "2014-08-11T01:16:44.421Z" }
-  { :id 4, :idParent 1, :count 0, :by "ian", :content "I DISAGREE", :at "2014-08-11T01:16:44.421Z" }
-  { :id 5, :idParent 0, :count 4, :by "ian", :content "A safe place for haskell talk", :at "2014-08-11T01:16:44.421Z" }
-  { :id 6, :idParent 5, :count 0, :by "hao", :content "A haskell thing", :at "2014-08-11T01:16:44.421Z" }
-  { :id 7, :idParent 5, :count 0, :by "jack", :content "Monads??", :at "2014-08-11T01:16:44.421Z" }
-  { :id 8, :idParent 5, :count 0, :by "cicero", :content "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas imperdiet nibh in odio eleifend ultricies. Mauris id eros condimentum, porttitor magna a, vulputate nulla. Morbi at semper urna. Sed venenatis nibh ut nisi consequat molestie. Vivamus tincidunt eu augue sit amet dictum. Pellentesque id porttitor ipsum. Quisque non blandit orci, sed pharetra erat. Nulla a iaculis orci, quis pretium urna. Nunc porttitor, magna vel auctor sagittis, libero eros condimentum magna, eget tincidunt est arcu ac elit. Donec in condimentum diam, vel tempor nulla. Vivamus rhoncus nibh felis, nec commodo odio gravida vitae. Proin tempus tortor ligula, sit amet blandit sapien cursus in.", :at "2014-08-11T01:16:44.421Z"}
-  { :id 9, :idParent 5, :count 0, :by "ian", :content "Words about programming", :at "2014-08-11T01:16:44.421Z" }
-  { :id 10, :idParent 0, :count 0, :by "aaron", :content "what is this thing", :at "2014-08-11T01:26:03.436Z" }
-}}))
+(defonce app-state (atom {:threads #{}}))
 
 (defonce comment-ch (chan))
 
-(om/root (partial components/thread-component comment-ch print true 0)
+(defn app-component [app-state owner]
+  (om/component
+   (let [threads (app-state :threads)]
+     (if (= 0 (count (app-state :threads)))
+       (dom/div nil "Loading...")
+       (om/build (partial components/thread-component comment-ch print true 0) threads)
+       ))))
+
+(om/root app-component
          app-state
-         {:path [:threads]
-          :target (js/document.getElementById "main")})
+         {:target (js/document.getElementById "main")})
 
 (defn form-pair [kvp]
   (string/join "=" (map js/encodeURIComponent kvp)))
@@ -89,5 +84,5 @@
     (swap! app-state add-thread value)
     (recur ws)))
 
-#_ (go (let [res (<! (GET (str conf/http-base "/threads")))]
-  (swap! app-state assoc :threads res)))
+(go (let [res (<! (GET (str conf/http-base "/threads")))]
+  (swap! app-state assoc :threads (apply hash-set res))))
