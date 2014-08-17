@@ -64,20 +64,20 @@
            " "
            (let [child-count (thread :count)
                  text (if (= child-count 0) "comment" (str child-count " comments" ))]
-             (link-button (partial on-click thread) text))))
+             (link-button on-click text))))
 
 (defn thread-children-component [on-comment build-child threads]
   (apply dom/div (classes "children")
          (om/build comment-component on-comment)
          (map build-child threads)))
 
-(defn thread-component [threads owner {:keys [on-click expanded id-thread]}]
+(defn thread-component [threads owner {:keys [id-thread]}]
   (reify
     om/IInitState
-    (init-state [_] {:expanded-children #{}})
+    (init-state [_] {:expanded false})
     om/IRenderState
     (render-state
-     [_ {:keys [expanded-children]}]
+     [_ {:keys [expanded]}]
      (let [thread (->> threads
                        (select #(= (% :id) id-thread))
                        first)
@@ -86,21 +86,10 @@
                          (sort-by :id >))]
        (dom/div (with-classes {:key id-thread} "thread" (if expanded "expanded" "collapsed"))
                 (thread-header-component thread)
-                (thread-body-component on-click thread)
+                (thread-body-component #(om/update-state! owner :expanded not) thread)
                 (if expanded
-                  (let [click (fn [op] (fn [{id-child :id}]
-                                         (om/update-state! owner
-                                                           :expanded-children
-                                                           #(op % id-child))))
-                        build-child (fn [{id-child :id}]
-                                      (let [opts (if (contains? expanded-children id-child)
-                                                   {:on-click (click disj)
-                                                    :expanded true
-                                                    :id-thread id-child}
-                                                   {:on-click (click conj)
-                                                    :expanded false
-                                                    :id-thread id-child})]
-                                        (om/build thread-component threads {:opts opts})))]
+                  (let [build-child (fn [{id-child :id}]
+                                      (om/build thread-component threads {:opts {:id-thread id-child}}))]
                     (thread-children-component #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
                                                build-child
                                                children)
