@@ -49,12 +49,15 @@
          {:path [:threads]
           :target (js/document.getElementById "main")})
 
+(defn form-pair [kvp]
+  (string/join "=" (map js/encodeURIComponent kvp)))
+
 (defn form-data [kvps]
-  (string/join "&" (map (partial string/join "=") kvps)))
+  (string/join "&" (map form-pair kvps)))
 
 (go-loop []
   (when-let [{:keys [text thread]} (<! comment-ch)]
-    (let [data (form-data [["by" "ian"]
+    (let [data (form-data [["by" "anon"]
                            ["content" text]])
           path (str conf/http-base "/threads/" (thread :id))
           res (<! (POST path data))]
