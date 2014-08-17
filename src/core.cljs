@@ -37,7 +37,10 @@
    (let [threads (app-state :threads)]
      (if (= 0 (count (app-state :threads)))
        (dom/div nil "Loading...")
-       (om/build (partial components/thread-component comment-ch print true 0) threads)
+       (om/build components/thread-component threads {:opts {:comment-ch comment-ch
+                                                             :on-click print
+                                                             :expanded true
+                                                             :id-thread 0}})
        ))))
 
 (om/root app-component

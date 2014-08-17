@@ -71,7 +71,7 @@
          (om/build comment-component on-comment)
          (map build-child threads)))
 
-(defn thread-component [comment-ch on-click expanded id-thread threads owner]
+(defn thread-component [threads owner {:keys [comment-ch on-click expanded id-thread]}]
   (reify
     om/IInitState
     (init-state [_] {:expanded-children #{}})
@@ -88,15 +88,21 @@
                 (thread-header-component thread)
                 (thread-body-component on-click thread)
                 (if expanded
-                  (let [click (fn [op] (fn [thread]
+                  (let [click (fn [op] (fn [{id-child :id}]
                                          (om/update-state! owner
                                                            :expanded-children
-                                                           #(op % (thread :id)))))
+                                                           #(op % id-child))))
                         build-child (fn [{id-child :id}]
-                                      (om/build (if (contains? expanded-children id-child)
-                                                  (partial thread-component comment-ch (click disj) true id-child)
-                                                  (partial thread-component comment-ch (click conj) false id-child))
-                                                threads))]
+                                      (let [opts (if (contains? expanded-children id-child)
+                                                   {:comment-ch comment-ch
+                                                    :on-click (click disj)
+                                                    :expanded true
+                                                    :id-thread id-child}
+                                                   {:comment-ch comment-ch
+                                                    :on-click (click conj)
+                                                    :expanded false
+                                                    :id-thread id-child})]
+                                        (om/build thread-component threads {:opts opts})))]
                     (thread-children-component #(put! comment-ch {:thread thread, :text %})
                                                build-child
                                                children)
