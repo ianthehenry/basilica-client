@@ -37,7 +37,7 @@
    (let [threads (app-state :threads)]
      (if (= 0 (count (app-state :threads)))
        (dom/div nil "Loading...")
-       (om/build components/thread-component [0 threads] {:init-state {:expanded true}})
+       (om/build components/root-thread-component threads)
        ))))
 
 (om/root app-component
@@ -51,14 +51,22 @@
 (defn form-data [kvps]
   (string/join "&" (map form-pair kvps)))
 
-(go-loop []
-  (when-let [{:keys [text thread]} (<! comment-ch)]
-    (let [data (form-data [["by" "anon"]
-                           ["content" text]])
-          path (str conf/api-base "/threads/" (thread :id))
-          res (<! (POST path data))]
-      (print res))
-    (recur)))
+(defn path-for [thread]
+  (apply str conf/api-base "/threads"
+         (if (nil? thread)
+           []
+           ["/" (thread :id)])
+         ))
+
+(go-loop
+ []
+ (when-let [{:keys [text thread]} (<! comment-ch)]
+   (let [data (form-data [["by" "anon"]
+                          ["content" text]])
+         res (<! (POST (path-for thread) data))]
+     (when res
+       (print "created thread: " res)))
+   (recur)))
 
 (defn update-set [s pred f]
   (let [x (first (select pred s))]
@@ -73,12 +81,12 @@
   #(= (% :id) (thread :idParent)))
 
 (defn add-thread [state thread]
-  (update-in state
-             [:threads]
-             #(-> %
-                  (conj thread)
-                  (update-set (parent-of-pred thread)
-                              inc-child-count))))
+  (let [update-parent (if (nil? (thread :idParent))
+                        identity
+                        #(update-set % (parent-of-pred thread) inc-child-count))]
+    (update-in state
+               [:threads]
+               #(-> % (conj thread) update-parent))))
 
 (go-loop [ws (<! (connect! (str conf/ws-base "/")))]
   (when-let [value (<! (ws :in))]

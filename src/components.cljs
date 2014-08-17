@@ -78,6 +78,18 @@
            (om/build comment-component on-comment)
            (map build-child children))))
 
+(defn root-thread-component [threads owner]
+  (om/component
+   (let [children (->> threads
+                       (select (comp nil? :idParent))
+                       (sort-by :id >))]
+     (dom/div nil
+              (dom/h1 nil "Basilica")
+              (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread nil, :text %})
+                                      children
+                                      threads))
+     )))
+
 (defn thread-component [[id-thread threads] owner]
   (reify
     om/IInitState
