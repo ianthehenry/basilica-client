@@ -37,15 +37,15 @@
    (let [threads (app-state :threads)]
      (if (= 0 (count (app-state :threads)))
        (dom/div nil "Loading...")
-       (om/build components/thread-component threads {:opts {:comment-ch comment-ch
-                                                             :on-click print
+       (om/build components/thread-component threads {:opts {:on-click print
                                                              :expanded true
                                                              :id-thread 0}})
        ))))
 
 (om/root app-component
          app-state
-         {:target (js/document.getElementById "main")})
+         {:shared {:comment-ch comment-ch}
+          :target (js/document.getElementById "main")})
 
 (defn form-pair [kvp]
   (string/join "=" (map js/encodeURIComponent kvp)))

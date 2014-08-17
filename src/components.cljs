@@ -71,7 +71,7 @@
          (om/build comment-component on-comment)
          (map build-child threads)))
 
-(defn thread-component [threads owner {:keys [comment-ch on-click expanded id-thread]}]
+(defn thread-component [threads owner {:keys [on-click expanded id-thread]}]
   (reify
     om/IInitState
     (init-state [_] {:expanded-children #{}})
@@ -94,16 +94,14 @@
                                                            #(op % id-child))))
                         build-child (fn [{id-child :id}]
                                       (let [opts (if (contains? expanded-children id-child)
-                                                   {:comment-ch comment-ch
-                                                    :on-click (click disj)
+                                                   {:on-click (click disj)
                                                     :expanded true
                                                     :id-thread id-child}
-                                                   {:comment-ch comment-ch
-                                                    :on-click (click conj)
+                                                   {:on-click (click conj)
                                                     :expanded false
                                                     :id-thread id-child})]
                                         (om/build thread-component threads {:opts opts})))]
-                    (thread-children-component #(put! comment-ch {:thread thread, :text %})
+                    (thread-children-component #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
                                                build-child
                                                children)
                     ))))
