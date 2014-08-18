@@ -38,15 +38,14 @@
 (defn comment-component [on-submit owner]
   (reify
     om/IDidMount
-    (did-mount [_] (.focus (om/get-node owner "input")))
+    (did-mount [_] (.focus (om/get-node owner)))
     om/IRender
     (render
      [_]
-     (dom/div (classes "comment")
-              "⌘↵ to submit"
-              (dom/textarea #js {:ref "input"
-                                 :onChange #(autosize (. % -target))
-                                 :onKeyDown (key-down on-submit)})))))
+     (dom/textarea (with-classes {:placeholder "⌘↵ to submit"
+                                  :onChange #(autosize (. % -target))
+                                  :onKeyDown (key-down on-submit)}
+                     "comment")))))
 
 (defn render-post-header [post]
   (dom/div (classes "header")

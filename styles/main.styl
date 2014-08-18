@@ -22,17 +22,25 @@ quiet()
   color: #888
   font: 10pt Helvetica
 
+a
+  color: #07c
+  &:visited
+    color: #4a6b82
+
 textarea
   width: 100%
   min-height: line-height * 1.5
   height: line-height * 1.5
   outline: none
-  padding: line-height * 0.25
   box-sizing: border-box
+  border-color: line-color
   resize: none
+  padding: line-height * 0.25
+  &::-webkit-input-placeholder
+    font-size: 10pt
+    line-height: line-height
+    color: line-color
 
-.comment
-  quiet()
 
 .post
   > .header
