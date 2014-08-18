@@ -31,9 +31,12 @@
           command (or (. e -metaKey) (. e -ctrlKey))]
       (when command
         (when (= key 13)
-          (on-submit (. textarea -value))
-          (set! (. textarea -value) "")
-          (autosize textarea))))))
+          (let [value (. textarea -value)]
+            (when-not (= value "")
+              (on-submit value)
+              (set! (. textarea -value) "")
+              (autosize textarea)))
+            )))))
 
 (defn comment-component [on-submit owner]
   (reify
