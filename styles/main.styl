@@ -8,6 +8,8 @@ line-height = 24px
 font = 13pt Helvetica
 spacing = line-height * 0.5
 indent-size = spacing
+line-color = #ccc
+code-color = #eee
 
 body
   padding: line-height
@@ -27,6 +29,7 @@ textarea
   outline: none
   padding: line-height * 0.25
   box-sizing: border-box
+  resize: none
 
 .comment
   quiet()
@@ -43,12 +46,14 @@ textarea
 
 code
   font-family: Menlo, Consolas, monospace
-  background-color: #ddd
+  background-color: code-color
+  padding: 0 0.2em
 
 .markdown
   * + p, * + ul, * + pre, * + ol,
   * + h1, * + h2, * + h3, * + h4,
-  * + h5, * + h6, * + table, * + img
+  * + h5, * + h6, * + table, * + img,
+  * + hr
     margin-top: 0.5em
   ul
     padding-left: 1em
@@ -58,22 +63,30 @@ code
   table
     border-collapse: collapse
     border-spacing: 0
-    border: solid 1px #888
+    border: solid 1px line-color
     td, th
       padding: 0.5em
-      border: solid 1px #888
+      border: solid 1px line-color
   img
     max-width: 100%
     max-height: 400px
+  hr
+    height: 1px
+    background-color: line-color
+    border: none
   pre
     padding: 0.5em
-    background-color: #000
-    color: #fff
+    background-color: code-color
     > code
       background-color: transparent
+      padding: 0
 
 .children
-  background-color: rgba(0, 0, 0, 0.1)
-  padding: indent-size
+  border-left: solid 1px line-color
+  padding: 0 indent-size
+  margin-top: indent-size 0
   > .post:not(:first-child)
     margin-top: spacing
+
+.post.expanded > .children
+  margin-top: 0.5em
