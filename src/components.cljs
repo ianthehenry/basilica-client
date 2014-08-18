@@ -4,6 +4,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [basilica.conf :as conf]
+   [basilica.autosize :refer [autosize]]
    [clojure.string :as string]
    [clojure.set :refer [select]]
    [cljs.core.async :as async :refer [chan close! put!]]))
@@ -23,22 +24,16 @@
 (defn classes [& all]
   (apply with-classes {} all))
 
-(defn bump-height [el delta]
-  (let [height (.-clientHeight el)]
-    (set! (.. el -style -height) (str (+ height delta) "px"))))
-
 (defn key-down [on-submit]
   (fn [e]
-    (let [node (. e -target)
+    (let [textarea (. e -target)
           key (. e -which)
-          command (or (. e -metaKey) (. e -ctrlKey))
-          bump-amount 40]
+          command (or (. e -metaKey) (. e -ctrlKey))]
       (when command
-        (when (= key 74) (bump-height node bump-amount))
-        (when (= key 75) (bump-height node (- bump-amount)))
         (when (= key 13)
-          (on-submit (. node -value))
-          (set! (. node -value) ""))))))
+          (on-submit (. textarea -value))
+          (set! (. textarea -value) "")
+          (autosize textarea))))))
 
 (defn comment-component [on-submit owner]
   (reify
@@ -48,8 +43,10 @@
     (render
      [_]
      (dom/div (classes "comment")
-              "enter: newline, cmd-enter: submit, cmd-j/k: resize | markdown coming eventually"
-              (dom/textarea #js {:ref "input", :onKeyDown (key-down on-submit)})))))
+              "⌘↵ to submit"
+              (dom/textarea #js {:ref "input"
+                                 :onChange #(autosize (. % -target))
+                                 :onKeyDown (key-down on-submit)})))))
 
 (defn render-thread-header [thread]
   (dom/div (classes "header")
