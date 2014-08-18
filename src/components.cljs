@@ -48,63 +48,63 @@
                                  :onChange #(autosize (. % -target))
                                  :onKeyDown (key-down on-submit)})))))
 
-(defn render-thread-header [thread]
+(defn render-post-header [post]
   (dom/div (classes "header")
-           (thread :by)
+           (post :by)
            " "
-           (format (thread :at))
+           (format (post :at))
            " "
-           (dom/a #js {:href (str conf/site-base "/" (thread :id))} "link")))
+           (dom/a #js {:href (str conf/site-base "/" (post :id))} "link")))
 
-(defn render-thread-body [on-click thread]
+(defn render-post-body [on-click post]
   (dom/div (classes "content")
-           (thread :content)
+           (post :content)
            " "
-           (let [child-count (thread :count)
+           (let [child-count (post :count)
                  text (if (= child-count 0) "comment" (str child-count " comments" ))]
              (link-button on-click text))))
 
-(declare thread-component)
+(declare post-component)
 
-(defn render-thread-children [on-comment children all-threads]
+(defn render-post-children [on-comment children all-posts]
   (let [build-child (fn [{id-child :id}]
-                      (om/build thread-component
-                                [id-child all-threads]
+                      (om/build post-component
+                                [id-child all-posts]
                                 {:react-key id-child}))]
     (apply dom/div (classes "children")
            (om/build comment-component on-comment)
            (map build-child children))))
 
-(defn root-thread-component [threads owner]
+(defn root-post-component [posts owner]
   (om/component
-   (let [children (->> threads
+   (let [children (->> posts
                        (select (comp nil? :idParent))
                        (sort-by :id >))]
      (dom/div nil
               (dom/h1 nil "Basilica")
-              (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread nil, :text %})
-                                      children
-                                      threads))
+              (render-post-children #(put! (om/get-shared owner :comment-ch) {:post nil, :text %})
+                                    children
+                                    posts))
      )))
 
-(defn thread-component [[id-thread threads] owner]
+(defn post-component [[id-post posts] owner]
   (reify
     om/IInitState
     (init-state [_] {:expanded false})
     om/IRenderState
     (render-state
      [_ {:keys [expanded]}]
-     (let [thread (->> threads
-                       (select #(= (% :id) id-thread))
-                       first)
-           children (->> threads
-                         (select #(= (% :idParent) id-thread))
+     (let [post (->> posts
+                     (select #(= (% :id) id-post))
+                     first)
+           children (->> posts
+                         (select #(= (% :idParent) id-post))
                          (sort-by :id >))]
-       (dom/div (classes "thread" (if expanded "expanded" "collapsed"))
-                (render-thread-header thread)
-                (render-thread-body #(om/update-state! owner :expanded not) thread)
+       (dom/div (classes "post" (if expanded "expanded" "collapsed"))
+                (render-post-header post)
+                (render-post-body #(om/update-state! owner :expanded not) post)
                 (if expanded
-                  (render-thread-children #(put! (om/get-shared owner :comment-ch) {:thread thread, :text %})
-                                          children
-                                          threads)))
-     ))))
+                  (render-post-children #(put! (om/get-shared owner :comment-ch) {:post post, :text %})
+                                        children
+                                        posts)))
+       ))))

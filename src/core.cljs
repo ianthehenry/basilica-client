@@ -28,7 +28,7 @@
     (.setPathPrefix "/basilica/")
     (.setEnabled true)))
 
-(defonce app-state (atom {:threads #{}
+(defonce app-state (atom {:posts #{}
                           :loaded false}))
 
 (defonce comment-ch (chan))
@@ -36,8 +36,8 @@
 (defn app-component [app-state owner]
   (om/component
    (if (app-state :loaded)
-     (om/build components/root-thread-component
-               (app-state :threads))
+     (om/build components/root-post-component
+               (app-state :posts))
      (dom/div nil "Loading..."))))
 
 (om/root app-component
@@ -51,21 +51,21 @@
 (defn form-data [kvps]
   (string/join "&" (map form-pair kvps)))
 
-(defn path-for [thread]
-  (apply str conf/api-base "/threads"
-         (if (nil? thread)
+(defn path-for [post]
+  (apply str conf/api-base "/posts"
+         (if (nil? post)
            []
-           ["/" (thread :id)])
+           ["/" (post :id)])
          ))
 
 (go-loop
  []
- (when-let [{:keys [text thread]} (<! comment-ch)]
+ (when-let [{:keys [text post]} (<! comment-ch)]
    (let [data (form-data [["by" "anon"]
                           ["content" text]])
-         res (<! (POST (path-for thread) data))]
+         res (<! (POST (path-for post) data))]
      (when res
-       (print "created thread: " res)))
+       (print "created post: " res)))
    (recur)))
 
 (defn update-set [s pred f]
@@ -74,25 +74,25 @@
         (disj x)
         (conj (f x)))))
 
-(defn inc-child-count [thread]
-  (update-in thread [:count] inc))
+(defn inc-child-count [post]
+  (update-in post [:count] inc))
 
-(defn parent-of-pred [thread]
-  #(= (% :id) (thread :idParent)))
+(defn parent-of-pred [post]
+  #(= (% :id) (post :idParent)))
 
-(defn add-thread [state thread]
-  (let [update-parent (if (nil? (thread :idParent))
+(defn add-post [state post]
+  (let [update-parent (if (nil? (post :idParent))
                         identity
-                        #(update-set % (parent-of-pred thread) inc-child-count))]
+                        #(update-set % (parent-of-pred post) inc-child-count))]
     (update-in state
-               [:threads]
-               #(-> % (conj thread) update-parent))))
+               [:posts]
+               #(-> % (conj post) update-parent))))
 
 (go-loop [ws (<! (connect! (str conf/ws-base "/")))]
          (when-let [value (<! (ws :in))]
-           (swap! app-state add-thread value)
+           (swap! app-state add-post value)
            (recur ws)))
 
-(go (when-let [res (<! (GET (str conf/api-base "/threads")))]
-      (swap! app-state assoc :threads (apply hash-set res))
+(go (when-let [res (<! (GET (str conf/api-base "/posts")))]
+      (swap! app-state assoc :posts (apply hash-set res))
       (swap! app-state assoc :loaded true)))
