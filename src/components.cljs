@@ -56,10 +56,15 @@
            " "
            (dom/a #js {:href (str conf/site-base "/" (post :id))} "link")))
 
+(. js/marked setOptions #js {:sanitize true})
+
+(defn markdown [text]
+  (dom/div #js {:className "markdown"
+                :dangerouslySetInnerHTML #js {:__html (js/marked text)}}))
+
 (defn render-post-body [on-click post]
   (dom/div (classes "content")
-           (post :content)
-           " "
+           (markdown (post :content))
            (let [child-count (post :count)
                  text (if (= child-count 0) "comment" (str child-count " comments" ))]
              (link-button on-click text))))
