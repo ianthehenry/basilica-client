@@ -38,7 +38,7 @@
    (if (app-state :loaded)
      (om/build components/root-post-component
                (app-state :posts))
-     (dom/div nil "Loading..."))))
+     (dom/div #js {:id "loading"}))))
 
 (om/root app-component
          app-state

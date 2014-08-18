@@ -88,7 +88,10 @@
                        (select (comp nil? :idParent))
                        (sort-by :id >))]
      (dom/div nil
-              (dom/h1 nil "Basilica")
+              (dom/div #js {:id "header"}
+                       (dom/a #js {:href conf/site-base}
+                              (dom/h1 nil "Basilica")))
+
               (render-post-children #(put! (om/get-shared owner :comment-ch) {:post nil, :text %})
                                     children
                                     posts))

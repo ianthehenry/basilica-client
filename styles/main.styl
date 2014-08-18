@@ -10,13 +10,21 @@ spacing = line-height * 0.5
 indent-size = spacing
 line-color = #ccc
 code-color = #eee
+text-color = #000
 
 body
   padding: line-height
+  padding-top: 0
 
 body, textarea
-  line-height: line-height
+  color: text-color
   font: font
+
+*
+  line-height: line-height
+
+h1, h2, h3, h4, h5, h6
+  line-height: 100%
 
 quiet()
   color: #888
@@ -89,12 +97,59 @@ code
       background-color: transparent
       padding: 0
 
-.children
-  border-left: solid 1px line-color
+.children .children
   padding: 0 indent-size
+  border-left: solid 1px line-color
+
+.children
   margin-top: indent-size 0
   > .post:not(:first-child)
     margin-top: spacing
 
 .post.expanded > .children
   margin-top: 0.5em
+
+html
+  background-color: code-color
+
+body
+  max-width: 800px
+  margin: 0 auto
+
+#main > div > .children
+  background-color: white
+  padding: indent-size
+
+#header h1
+  padding: indent-size
+
+#header
+  h1
+    font-weight: normal
+    font-size: 16pt
+  a
+    text-decoration: none
+    color: text-color
+
+loading-size = 100px
+
+#loading
+  border-radius: loading-size * 0.5
+  background-color: white
+  width: loading-size
+  height: loading-size
+  position: absolute
+  top: 50%
+  left: 50%
+  margin-top: -(loading-size * 0.5)
+  margin-left: -(loading-size * 0.5)
+  line-height: loading-size
+  text-align: center
+  -webkit-animation: swell 0.5s infinite alternate
+  -webkit-animation-timing-function: ease-in-out
+
+@-webkit-keyframes swell
+    from
+      transform: none
+    to
+      transform: scale(1.1, 1.1)
