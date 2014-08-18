@@ -12,9 +12,17 @@ line-color = #ccc
 code-color = #eee
 text-color = #000
 
+html
+  background-color: code-color
+
 body
+  max-width: 800px
+  margin: 0 auto
   padding: line-height
   padding-top: 0
+  @media screen and (max-width: 600px)
+    padding: line-height * 0.5
+    padding-top: 0
 
 body, textarea
   color: text-color
@@ -49,7 +57,6 @@ textarea
     line-height: line-height
     color: line-color
 
-
 .post
   > .header
     quiet()
@@ -66,6 +73,8 @@ code
   padding: 0 0.2em
 
 .markdown
+  > *
+    max-width: 100%
   * + p, * + ul, * + pre, * + ol,
   * + h1, * + h2, * + h3, * + h4,
   * + h5, * + h6, * + table, * + img,
@@ -84,13 +93,13 @@ code
       padding: 0.5em
       border: solid 1px line-color
   img
-    max-width: 100%
     max-height: 400px
   hr
     height: 1px
     background-color: line-color
     border: none
   pre
+    overflow-x: auto
     padding: 0.5em
     background-color: code-color
     > code
@@ -108,13 +117,6 @@ code
 
 .post.expanded > .children
   margin-top: 0.5em
-
-html
-  background-color: code-color
-
-body
-  max-width: 800px
-  margin: 0 auto
 
 #main > div > .children
   background-color: white
@@ -135,7 +137,7 @@ loading-size = 100px
 
 #loading
   border-radius: loading-size * 0.5
-  background-color: white
+  background-color: #ccc
   width: loading-size
   height: loading-size
   position: absolute
@@ -149,7 +151,10 @@ loading-size = 100px
   -webkit-animation-timing-function: ease-in-out
 
 @-webkit-keyframes swell
-    from
-      transform: none
-    to
-      transform: scale(1.1, 1.1)
+  from
+    transform: none
+    -webkit-transform: none
+  to
+    transform: scale3d(1.1, 1.1, 1)
+    -webkit-transform: scale3d(1.1, 1.1, 1)
+
