@@ -15,8 +15,16 @@
               :onClick #(do (on-click) false)}
          text))
 
+(js/moment.locale "en" #js {:calendar #js {:lastDay "LT [yesterday]",
+                                           :sameDay "LT"
+                                           :nextDay "LT [tomorrow]"
+                                           :lastWeek "LT [last] dddd"
+                                           :nextWeek "LT [next] dddd"
+                                           :sameElse "LT ddd, MMM D YYYY"
+                                           }})
+
 (defn format [timestamp-string]
-  (.fromNow (js/moment timestamp-string)))
+  (.calendar (js/moment timestamp-string)))
 
 (defn with-classes [keys & all]
   (clj->js (into keys {:className (string/join " " all)})))
@@ -63,11 +71,10 @@
 
 (defn render-post-header [post]
   (dom/div (classes "header")
-           (post :by)
+           (dom/span (classes "by") (post :by))
            " "
-           (format (post :at))
-           " "
-           (dom/a #js {:href (str conf/site-base "/" (post :id))} "link")))
+           (dom/a #js {:href (str conf/site-base "/" (post :id))}
+                  (format (post :at)))))
 
 (. js/marked setOptions #js {:sanitize true})
 

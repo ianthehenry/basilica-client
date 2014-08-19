@@ -60,10 +60,6 @@ body, textarea
 h1, h2, h3, h4, h5, h6
   line-height: 100%
 
-quiet()
-  color: #888
-  font: 10pt Helvetica
-
 a
   color: #07c
   &:visited
@@ -97,13 +93,12 @@ a
       background-color: darken(code-color, 20%)
 
   .header
-    quiet()
-    > a
+    font: 10pt Helvetica
+    a
       color: #888
-
-  .content
-    a.button
-      quiet()
+      text-decoration: none
+    a:hover
+      text-decoration: underline
 
 code
   font: 13px Menlo, Consolas, monospace
