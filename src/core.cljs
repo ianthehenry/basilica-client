@@ -34,5 +34,5 @@
 
 (om/root posts/app-component
          app-state
-         {:shared {:comment-ch (async/chan)}
+         {:shared {:post-ch (async/chan)}
           :target (js/document.getElementById "main")})

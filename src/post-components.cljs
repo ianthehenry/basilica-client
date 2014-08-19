@@ -48,7 +48,7 @@
       (clear textarea)
       (.focus textarea))))
 
-(defn comment-component [on-submit owner]
+(defn add-post-component [on-submit owner]
   (reify
     om/IDidMount
     (did-mount [_]
@@ -90,19 +90,19 @@
 
 (declare post-component)
 
-(defn render-post-children [on-comment children all-posts]
+(defn render-post-children [on-post children all-posts]
   (let [build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child all-posts]
                                 {:react-key id-child}))]
     (apply dom/div (classes "children")
-           (om/build comment-component on-comment)
+           (om/build add-post-component on-post)
            (map build-child children))))
 
 (defn make-submit-handler [owner post]
   (fn [text]
     (when-not (= text "")
-      (put! (om/get-shared owner :comment-ch) {:post post, :text text}))))
+      (put! (om/get-shared owner :post-ch) {:post post, :text text}))))
 
 (defn root-post-component [posts owner]
   (om/component
@@ -134,7 +134,7 @@
                                   (let [child-count (post :count)
                                         text (if expanded "-" (if (= child-count 0) "+" (str child-count)))]
                                     (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)}
-                                                  "comments")
+                                                  "toggle-button")
                                                 text)))
                          (dom/div (classes "alley")
                                   (render-post-header post)

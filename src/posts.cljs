@@ -139,17 +139,17 @@
        (set-unread-stuff!)))
    (recur)))
 
-(defn upload-posts [comment-ch]
+(defn upload-posts [post-ch]
   (go-loop
    []
-   (when-let [{:keys [text post]} (<! comment-ch)]
+   (when-let [{:keys [text post]} (<! post-ch)]
      (let [res (<! (POST (utils/api-url "posts" (:id post))
                          {:by "anon" :content text}))]
        (if res
          (print "created post: " res)
          (print "failed to create post!")))
      (recur))
-   (print "comment channel closed!")))
+   (print "post channel closed!")))
 
 (defn app-component [app-state owner]
   (reify
@@ -161,7 +161,7 @@
 
      (keep-sockets-shiny app-state)
      (absorb-incoming-posts app-state)
-     (upload-posts (om/get-shared owner :comment-ch)))
+     (upload-posts (om/get-shared owner :post-ch)))
     om/IRender
     (render
      [_]
