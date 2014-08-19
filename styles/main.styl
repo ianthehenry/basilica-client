@@ -82,26 +82,19 @@ a
       background-color: code-color
     > .alley
       flex-stretch()
-      padding: 0 alley-inset
-      border: solid 1px line-color
-      border-left: none
+      padding-left: alley-inset
 
   .avatar
-    background-color: code-color
     text-align: center
     &::after
       content: "☃"
 
   .comments
-    color: text-color
     background-color: code-color
     &:hover
-      color: darken(text-color, 10%)
       background-color: darken(code-color, 10%)
     &:active
-      color: darken(text-color, 20%)
       background-color: darken(code-color, 20%)
-    border: solid 1px line-color
 
   .header
     quiet()
@@ -123,8 +116,6 @@ code
   * + h5, * + h6, * + table, * + img,
   * + hr, * + blockquote
     margin-top: 0.5em
-  :last-child:not(p)
-    margin-bottom: 0.3em
   ul
     padding-left: 1em
     list-style: disc
@@ -275,9 +266,11 @@ button
   outline: none
   &:hover
     color: darken(line-color, 40%)
+    border-color: darken(line-color, 10%)
     background-color: code-color
   &:active
     color: darken(line-color, 50%)
+    border-color: darken(line-color, 20%)
     background-color: darken(code-color, 10%)
 
 loading-size = 100px
