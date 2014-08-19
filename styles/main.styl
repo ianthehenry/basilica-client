@@ -45,20 +45,6 @@ a
   &:visited
     color: #4a6b82
 
-textarea
-  width: 100%
-  min-height: line-height * 1.5
-  height: line-height * 1.5
-  outline: none
-  box-sizing: border-box
-  border-color: line-color
-  resize: none
-  padding: line-height * 0.25
-  &::-webkit-input-placeholder
-    font-size: 10pt
-    line-height: line-height
-    color: line-color
-
 .post
   > .header
     quiet()
@@ -132,15 +118,23 @@ header-height = line-height * 2
 
 status-size = 30px
 
-#header
-  height: header-height
+flex()
   display: -webkit-flex
   display: flex
-  -webkit-align-items: stretch
-  align-items: stretch
+
+flex-fixed()
+  -webkit-flex-shrink: 0
+  flex-shrink: 0
+
+flex-stretch()
+  -webkit-flex: 1
+  flex: 1
+
+#header
+  height: header-height
+  flex()
   > h1
-    -webkit-flex: 1
-    flex: 1
+    flex-stretch()
     font-weight: normal
     font-size: 16pt
     > a
@@ -150,8 +144,7 @@ status-size = 30px
       color: text-color
 
   > #socket-status
-    -webkit-flex-shrink: 0
-    flex-shrink: 0
+    flex-fixed()
     border-radius: status-size * 0.5
     margin: (header-height - status-size) * 0.5
     margin-right: 0
@@ -174,6 +167,40 @@ status-size = 30px
       &::after
         content: "☂"
 
+.add-post
+  flex()
+  textarea
+    flex-stretch()
+    min-height: line-height * 1.5
+    height: line-height * 1.5
+    outline: none
+    box-sizing: border-box
+    border-color: line-color
+    resize: none
+    padding: line-height * 0.25
+    &::-webkit-input-placeholder
+      font-size: 10pt
+      line-height: line-height
+      color: line-color
+  button
+    font-size: 8pt
+    &::after
+      content: "▷"
+    width: line-height * 1.5
+    margin-left: indent-size
+    flex-fixed()
+
+button
+  color: darken(line-color, 30%)
+  border: solid 1px line-color
+  background-color: #fff
+  outline: none
+  &:hover
+    color: darken(line-color, 40%)
+    background-color: code-color
+  &:active
+    color: darken(line-color, 50%)
+    background-color: darken(code-color, 10%)
 
 loading-size = 100px
 

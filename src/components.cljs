@@ -24,6 +24,10 @@
 (defn classes [& all]
   (apply with-classes {} all))
 
+(defn clear [textarea]
+  (set! (. textarea -value) "")
+  (autosize textarea))
+
 (defn key-down [on-submit]
   (fn [e]
     (let [textarea (. e -target)
@@ -31,24 +35,31 @@
           command (or (. e -metaKey) (. e -ctrlKey))]
       (when command
         (when (= key 13)
-          (let [value (. textarea -value)]
-            (when-not (= value "")
-              (on-submit value)
-              (set! (. textarea -value) "")
-              (autosize textarea)))
-            )))))
+          (on-submit (. textarea -value))
+          (clear textarea)))
+      )))
+
+(defn mouse-down [on-submit get-textarea]
+  (fn [e]
+    (let [textarea (get-textarea)]
+      (on-submit (. textarea -value))
+      (clear textarea)
+      (.focus textarea))))
 
 (defn comment-component [on-submit owner]
   (reify
     om/IDidMount
-    (did-mount [_] (.focus (om/get-node owner)))
+    (did-mount [_] (.focus (om/get-node owner "input")))
     om/IRender
     (render
      [_]
-     (dom/textarea (with-classes {:placeholder "⌘↵ to submit"
-                                  :onChange #(autosize (. % -target))
-                                  :onKeyDown (key-down on-submit)}
-                     "comment")))))
+     (dom/div (classes "add-post")
+              (dom/textarea #js {:placeholder "⌘↵ to submit"
+                                 :ref "input"
+                                 :onChange #(autosize (. % -target))
+                                 :onKeyDown (key-down on-submit)})
+              (dom/button #js {:onClick (mouse-down on-submit #(om/get-node owner "input"))}))
+     )))
 
 (defn render-post-header [post]
   (dom/div (classes "header")
@@ -82,12 +93,17 @@
            (om/build comment-component on-comment)
            (map build-child children))))
 
+(defn make-submit-handler [owner post]
+  (fn [text]
+    (when-not (= text "")
+      (put! (om/get-shared owner :comment-ch) {:post post, :text text}))))
+
 (defn root-post-component [posts owner]
   (om/component
    (let [children (->> posts
                        (select (comp nil? :idParent))
                        (sort-by :id >))]
-     (render-post-children #(put! (om/get-shared owner :comment-ch) {:post nil, :text %})
+     (render-post-children (make-submit-handler owner nil)
                            children
                            posts)
      )))
@@ -109,7 +125,7 @@
                 (render-post-header post)
                 (render-post-body #(om/update-state! owner :expanded not) post)
                 (if expanded
-                  (render-post-children #(put! (om/get-shared owner :comment-ch) {:post post, :text %})
+                  (render-post-children (make-submit-handler owner post)
                                         children
                                         posts)))
        ))))
