@@ -26,7 +26,7 @@
   (let [source (js/getComputedStyle textarea)
         target-style (. sizing-node -style)]
 
-    (doseq [property ["white-space" "word-wrap" "break-word"
+    (doseq [property ["white-space" "word-wrap" "word-break"
                       "padding" "border" "box-sizing" "font"
                       "font-kerning" "line-height" "word-spacing"]]
       (aset target-style property (aget source (camel-cased property))))
@@ -39,4 +39,4 @@
       (set! (.. sizing-node -textContent) text))
 
     (set! (.. textarea -style -height)
-          (str (. sizing-node -clientHeight) "px"))))
+          (str (. sizing-node -offsetHeight) "px"))))
