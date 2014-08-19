@@ -57,7 +57,14 @@
 (defn comment-component [on-submit owner]
   (reify
     om/IDidMount
-    (did-mount [_] (.focus (om/get-node owner "input")))
+    (did-mount [_]
+               (let [textarea (om/get-node owner "input")
+                     resize-listener #(autosize textarea)]
+                 (.focus textarea)
+                 (.addEventListener js/window "resize" resize-listener)
+                 (om/set-state! owner :resize-listener resize-listener)))
+    om/IWillUnmount
+    (will-unmount [_] (.removeEventListener js/window (om/get-state owner :resize-listener)))
     om/IRender
     (render
      [_]
