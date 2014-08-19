@@ -280,26 +280,23 @@ button
     border-color: darken(line-color, 20%)
     background-color: darken(code-color, 10%)
 
-loading-inner-size = 80px
-loading-border-size = 10px
-loading-outer-size = loading-inner-size + (loading-border-size * 2)
+loading-size = 80px
 
 #loading
-  border-radius: loading-outer-size * 0.5
-  color: #ccc
-  width: loading-inner-size
-  height: loading-inner-size
+  border-radius: loading-size * 0.5
+  background-color: #ccc
+  color: code-color
+  width: loading-size
+  height: loading-size
   position: absolute
   top: 50%
   left: 50%
-  margin-top: -(loading-outer-size * 0.5)
-  margin-left: -(loading-outer-size * 0.5)
-  line-height: loading-inner-size
+  margin-top: -(loading-size * 0.5)
+  margin-left: -(loading-size * 0.5)
+  line-height: loading-size
   text-align: center
   -webkit-animation: swell 0.5s infinite alternate ease-in-out
-  box-sizing: content-box
-  border: solid loading-border-size
-  font-size: loading-inner-size * 0.75
+  font-size: loading-size * 0.75
   &.error
     -webkit-animation: none
     &::after
