@@ -7,7 +7,7 @@
    [basilica.conf :as conf]
    [basilica.net :refer [GET connect! POST]]
    [basilica.components :as components]
-   [clojure.set :refer [select]]
+   [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]
    [secretary.core :as secretary :include-macros true :refer [defroute]]
    [goog.events :as events]
@@ -32,8 +32,9 @@
     (.setEnabled true)))
 
 (defonce app-state (atom {:posts #{}
-                          :socket-state :disconnected
-                          :loaded false}))
+                          :latest-post-id nil
+                          :loaded false
+                          :socket-state :disconnected}))
 
 (defonce comment-ch (async/chan))
 (defonce new-posts-ch (async/chan))
@@ -62,8 +63,7 @@
   (apply str conf/api-base "/posts"
          (if (nil? post)
            []
-           ["/" (post :id)])
-         ))
+           ["/" (post :id)])))
 
 (go-loop
  []
@@ -131,13 +131,41 @@
 
 (aset js/window "onfocus" clear-unread-stuff!)
 
+(defn safe-max [& args]
+  (let [filtered (filter (complement nil?) args)]
+    (if (seq filtered)
+      (apply max filtered)
+      nil)))
+
 (go-loop
  []
  (let [post (<! new-posts-ch)]
    (swap! app-state add-post post)
+   (swap! app-state update-in [:latest-post] safe-max (post :id))
    (when-not (js/document.hasFocus)
      (set-unread-stuff!)))
  (recur))
+
+(defn posts-request []
+  (let [latest (@app-state :latest-post)]
+    (GET (str conf/api-base "/posts")
+         (if (nil? latest) nil {:after latest}))))
+
+(defn load-initial-data [res]
+  (swap! app-state #(-> %
+                        (assoc :posts (apply hash-set res))
+                        (assoc :latest-post (-> res first :id))
+                        (assoc :loaded true))))
+
+(defn load-more-data [res]
+  (swap! app-state #(-> %
+                        (update-in [:posts] union (apply hash-set res))
+                        (assoc :latest-post (-> res first :id)))))
+
+(defn load-data [res]
+  ((if (@app-state :loaded)
+     load-more-data
+     load-initial-data) res))
 
 (go-loop
  [ws (<! (new-websocket))]
@@ -151,6 +179,13 @@
      (swap! app-state assoc :socket-state :error)
      (recur (<! (reconnect-with-backoff)))))
 
+ (log "requesting data")
+ (if-let [res (<! (posts-request))]
+   (do
+     (log "data load complete")
+     (load-data res))
+   (js/alert "a wild network inconsistency appears! please tell ian so he can fix the server"))
+
  (loop []
    (when-let [value (<! (ws :in))]
      (async/put! new-posts-ch value)
@@ -159,7 +194,3 @@
  (swap! app-state assoc :socket-state :disconnected)
  (log "disconnected")
  (recur (<! (reconnect-with-backoff))))
-
-(go (when-let [res (<! (GET (str conf/api-base "/posts")))]
-      (swap! app-state assoc :posts (apply hash-set res))
-      (swap! app-state assoc :loaded true)))

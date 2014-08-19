@@ -4,6 +4,7 @@
    [goog.net.XhrIo :as xhr]
    [clojure.walk :refer [keywordize-keys]]
    [cljs.core.async :as async :refer [chan close! <! >! put!]]
+   [goog.Uri :as uri]
    ))
 
 (defn callback [ch]
@@ -24,7 +25,11 @@
      (xhr/send url (callback ch) method data)
      ch)))
 
-(def GET (partial request "GET"))
+(defn GET [path query]
+  (let [uri (uri/parse path)]
+    (doseq [[k v] query]
+      (. uri setParameterValue (name k) v))
+    (request "GET" uri)))
 (def POST (partial request "POST"))
 
 ; adapted from https://github.com/loganlinn/cljs-websockets-async
