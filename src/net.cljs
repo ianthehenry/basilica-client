@@ -5,6 +5,7 @@
    [clojure.walk :refer [keywordize-keys]]
    [cljs.core.async :as async :refer [chan close! <! >! put!]]
    [goog.Uri :as uri]
+   [clojure.string :as string]
    ))
 
 (defn callback [ch]
@@ -30,7 +31,18 @@
     (doseq [[k v] query]
       (. uri setParameterValue (name k) v))
     (request "GET" uri)))
-(def POST (partial request "POST"))
+
+(defn form-pair [kvp]
+  (string/join "=" (map js/encodeURIComponent kvp)))
+
+(defn form-data [kvps]
+  (string/join "&" (map form-pair kvps)))
+
+(defn POST [url data]
+  (request "POST" url
+           (->> (seq data)
+                (map (fn [[k v]] [(name k) v]))
+                form-data)))
 
 ; adapted from https://github.com/loganlinn/cljs-websockets-async
 (defn connect!

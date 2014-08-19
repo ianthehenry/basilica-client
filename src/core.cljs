@@ -19,16 +19,11 @@
 (defn logger [area & msg]
   (apply print (str area) msg))
 
-(defn path-from [s]
-  (remove #(= "" %) (string/split s #"/")))
-
-(defroute "*path" [path]
-  (js/console.log (clj->js (path-from path))))
-
-(let [h (Html5History.)]
-  (events/listen h EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
-  (doto h (.setUseFragment false)
-    (.setPathPrefix "/basilica/")
+(let [hist (Html5History.)]
+  (events/listen hist EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
+  (doto hist
+    (.setUseFragment false)
+    (.setPathPrefix utils/site-hist-prefix)
     (.setEnabled true)))
 
 (defonce app-state (atom {:posts #{}
@@ -49,17 +44,6 @@
      (dom/div #js {:id "loading"
                    :className (name (app-state :socket-state))}))))
 
-(om/root app-component
-         app-state
-         {:shared {:comment-ch comment-ch}
-          :target (js/document.getElementById "main")})
-
-(defn form-pair [kvp]
-  (string/join "=" (map js/encodeURIComponent kvp)))
-
-(defn form-data [kvps]
-  (string/join "&" (map form-pair kvps)))
-
 (defn path-for [post]
   (apply utils/api-url "posts"
          (if (nil? post)
@@ -69,11 +53,10 @@
 (go-loop
  []
  (when-let [{:keys [text post]} (<! comment-ch)]
-   (let [data (form-data [["by" "anon"]
-                          ["content" text]])
-         res (<! (POST (path-for post) data))]
-     (when res
-       (print "created post: " res)))
+   (let [res (<! (POST (path-for post) {:by "anon" :content text}))]
+     (if res
+       (print "created post: " res)
+       (print "failed to create post!")))
    (recur)))
 
 (defn update-set [s pred f]
@@ -195,3 +178,17 @@
  (swap! app-state assoc :socket-state :disconnected)
  (log "disconnected")
  (recur (<! (reconnect-with-backoff))))
+
+(defroute "/signup" [path]
+  (print "sign up!"))
+
+(defn path-from [s]
+  (remove #(= "" %) (string/split s #"/")))
+
+(defroute "*path" [path]
+  (print "path: " (path-from path)))
+
+(om/root app-component
+           app-state
+           {:shared {:comment-ch comment-ch}
+            :target (js/document.getElementById "main")})
