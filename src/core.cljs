@@ -46,7 +46,9 @@
               (om/build components/header-component (app-state :socket-state))
               (om/build components/root-post-component
                         (app-state :posts)))
-     (dom/div #js {:id "loading"}))))
+     (dom/div #js {:id "loading"
+                   :className (name (app-state :socket-state))
+                   }))))
 
 (om/root app-component
          app-state
