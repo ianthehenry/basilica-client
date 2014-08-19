@@ -1,4 +1,4 @@
-(ns basilica.components
+(ns basilica.post-components
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require
    [om.core :as om :include-macros true]

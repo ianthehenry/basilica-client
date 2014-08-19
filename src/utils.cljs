@@ -15,3 +15,8 @@
   (if (= conf/site-base [])
     "/"
     (string/join "/" (concat [""] conf/site-base [""]))))
+
+(enable-console-print!)
+
+(defn logger [area & msg]
+  (apply print (str area) msg))
