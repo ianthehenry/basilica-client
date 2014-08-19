@@ -36,6 +36,7 @@
                           :loaded false}))
 
 (defonce comment-ch (async/chan))
+(defonce new-posts-ch (async/chan))
 
 (defn app-component [app-state owner]
   (om/component
@@ -119,6 +120,25 @@
      (async/pipe (new-websocket) c))
     c))
 
+(defn get-title []
+  (aget (js/document.getElementsByTagName "title") 0))
+
+(defn set-unread-stuff! []
+  (aset (get-title) "textContent" "*Basilica"))
+
+(defn clear-unread-stuff! []
+  (aset (get-title) "textContent" "Basilica"))
+
+(aset js/window "onfocus" clear-unread-stuff!)
+
+(go-loop
+ []
+ (let [post (<! new-posts-ch)]
+   (swap! app-state add-post post)
+   (when-not (js/document.hasFocus)
+     (set-unread-stuff!)))
+ (recur))
+
 (go-loop
  [ws (<! (new-websocket))]
  (if ws
@@ -133,7 +153,7 @@
 
  (loop []
    (when-let [value (<! (ws :in))]
-     (swap! app-state add-post value)
+     (async/put! new-posts-ch value)
      (recur)))
 
  (swap! app-state assoc :socket-state :disconnected)
