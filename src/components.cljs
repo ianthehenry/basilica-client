@@ -75,12 +75,9 @@
   (dom/div #js {:className "markdown"
                 :dangerouslySetInnerHTML #js {:__html (js/marked text)}}))
 
-(defn render-post-body [on-click post]
+(defn render-post-body [post]
   (dom/div (classes "content")
-           (markdown (post :content))
-           (let [child-count (post :count)
-                 text (if (= child-count 0) "comment" (str child-count " comments" ))]
-             (link-button on-click text))))
+           (markdown (post :content))))
 
 (declare post-component)
 
@@ -122,8 +119,17 @@
                          (select #(= (% :idParent) id-post))
                          (sort-by :id >))]
        (dom/div (classes "post" (if expanded "expanded" "collapsed"))
-                (render-post-header post)
-                (render-post-body #(om/update-state! owner :expanded not) post)
+                (dom/div (classes "this-post")
+                         (dom/div (classes "gutter")
+                                  (dom/div (classes "avatar"))
+                                  (let [child-count (post :count)
+                                        text (if (= child-count 0) "+" (str child-count))]
+                                    (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)}
+                                                  "comments")
+                                                text)))
+                         (dom/div (classes "alley")
+                                  (render-post-header post)
+                                  (render-post-body post)))
                 (if expanded
                   (render-post-children (make-submit-handler owner post)
                                         children

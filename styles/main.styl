@@ -13,6 +13,30 @@ indent-size = spacing
 line-color = #ccc
 code-color = #eee
 text-color = #333
+alley-inset = 0.3em
+
+gutter-size = line-height
+
+flex()
+  display: -webkit-flex
+  display: flex
+
+flex-vertical()
+  flex()
+  -webkit-flex-direction: column
+  flex-direction: column
+
+flex-fixed()
+  -webkit-flex-shrink: 0
+  flex-shrink: 0
+
+flex-stretch()
+  -webkit-flex-grow: 1
+  flex-grow: 1
+
+flex-spaced()
+  -webkit-justify-content: space-between
+  justify-content: space-between
 
 html
   background-color: code-color
@@ -46,12 +70,45 @@ a
     color: #4a6b82
 
 .post
-  > .header
+  > .this-post
+    flex()
+    > .gutter
+      flex-fixed()
+      flex-vertical()
+      flex-spaced()
+      > *
+        width: gutter-size
+        height: gutter-size
+      background-color: code-color
+    > .alley
+      flex-stretch()
+      padding: 0 alley-inset
+      border: solid 1px line-color
+      border-left: none
+
+  .avatar
+    background-color: code-color
+    text-align: center
+    &::after
+      content: "☃"
+
+  .comments
+    color: text-color
+    background-color: code-color
+    &:hover
+      color: darken(text-color, 10%)
+      background-color: darken(code-color, 10%)
+    &:active
+      color: darken(text-color, 20%)
+      background-color: darken(code-color, 20%)
+    border: solid 1px line-color
+
+  .header
     quiet()
     > a
       color: #888
 
-  > .content
+  .content
     a.button
       quiet()
 
@@ -66,6 +123,8 @@ code
   * + h5, * + h6, * + table, * + img,
   * + hr, * + blockquote
     margin-top: 0.5em
+  :last-child:not(p)
+    margin-bottom: 0.3em
   ul
     padding-left: 1em
     list-style: disc
@@ -99,8 +158,10 @@ code
     padding-left: indent-size
 
 .children .children
-  padding: 0 indent-size
-  border-left: solid 1px line-color
+  guide-width = 2px
+  margin-left: (gutter-size - guide-width) * 0.5
+  padding-left: (gutter-size - guide-width) * 0.5
+  border-left: solid guide-width #ddd
 
 .children
   margin-top: indent-size 0
@@ -117,18 +178,6 @@ code
 header-height = line-height * 2
 
 status-size = 30px
-
-flex()
-  display: -webkit-flex
-  display: flex
-
-flex-fixed()
-  -webkit-flex-shrink: 0
-  flex-shrink: 0
-
-flex-stretch()
-  -webkit-flex: 1
-  flex: 1
 
 #header
   height: header-height
