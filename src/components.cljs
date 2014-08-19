@@ -87,14 +87,9 @@
    (let [children (->> posts
                        (select (comp nil? :idParent))
                        (sort-by :id >))]
-     (dom/div nil
-              (dom/div #js {:id "header"}
-                       (dom/a #js {:href conf/site-base}
-                              (dom/h1 nil "Basilica")))
-
-              (render-post-children #(put! (om/get-shared owner :comment-ch) {:post nil, :text %})
-                                    children
-                                    posts))
+     (render-post-children #(put! (om/get-shared owner :comment-ch) {:post nil, :text %})
+                           children
+                           posts)
      )))
 
 (defn post-component [[id-post posts] owner]
@@ -118,3 +113,15 @@
                                         children
                                         posts)))
        ))))
+
+(def status-titles {:disconnected "A little weather. Waiting for the clouds to pass..."
+                    :connected "It's a sunny day in websocket land!"
+                    :error "We cannot see Basilica through this storm. Trying again soon..."})
+
+(defn header-component [socket-state owner]
+  (om/component
+   (dom/div #js {:id "header"}
+            (dom/h1 nil (dom/a #js {:href conf/site-base} "Basilica"))
+            (dom/div (with-classes {:id "socket-status"
+                                    :title (status-titles socket-state)}
+                       (name socket-state))))))

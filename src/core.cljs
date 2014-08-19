@@ -8,13 +8,16 @@
    [basilica.net :refer [GET connect! POST]]
    [basilica.components :as components]
    [clojure.set :refer [select]]
-   [cljs.core.async :as async :refer [chan close!]]
+   [cljs.core.async :as async :refer [<!]]
    [secretary.core :as secretary :include-macros true :refer [defroute]]
    [goog.events :as events]
    [goog.history.EventType :as EventType])
   (:import goog.history.Html5History))
 
 (enable-console-print!)
+
+(defn logger [area & msg]
+  (apply print (str area) msg))
 
 (defn path-from [s]
   (remove #(= "" %) (string/split s #"/")))
@@ -29,15 +32,18 @@
     (.setEnabled true)))
 
 (defonce app-state (atom {:posts #{}
+                          :socket-state :disconnected
                           :loaded false}))
 
-(defonce comment-ch (chan))
+(defonce comment-ch (async/chan))
 
 (defn app-component [app-state owner]
   (om/component
    (if (app-state :loaded)
-     (om/build components/root-post-component
-               (app-state :posts))
+     (dom/div nil
+              (om/build components/header-component (app-state :socket-state))
+              (om/build components/root-post-component
+                        (app-state :posts)))
      (dom/div #js {:id "loading"}))))
 
 (om/root app-component
@@ -88,10 +94,51 @@
                [:posts]
                #(-> % (conj post) update-parent))))
 
-(go-loop [ws (<! (connect! (str conf/ws-base "/")))]
-         (when-let [value (<! (ws :in))]
-           (swap! app-state add-post value)
-           (recur ws)))
+(def log (partial logger :websockets))
+
+(defn new-websocket []
+  (log "trying to connect...")
+  (connect! (str conf/ws-base "/")))
+
+(defn wait [ms]
+  (let [c (async/chan)]
+    (js/setTimeout #(async/close! c) ms)
+    c))
+
+(def min-reconnect 1000)
+(defonce reconnect-delay-ms (atom min-reconnect))
+(defn next-backoff [current]
+  (min (* 2 current) (* 1000 64)))
+
+(defn reconnect-with-backoff []
+  (log "reconnecting in" @reconnect-delay-ms "ms...")
+  (let [c (async/chan)]
+    (go
+     (<! (wait @reconnect-delay-ms))
+     (swap! reconnect-delay-ms next-backoff)
+     (async/pipe (new-websocket) c))
+    c))
+
+(go-loop
+ [ws (<! (new-websocket))]
+ (if ws
+   (do
+     (reset! reconnect-delay-ms min-reconnect)
+     (log "connected")
+     (swap! app-state assoc :socket-state :connected))
+   (do
+     (log "failed to connect")
+     (swap! app-state assoc :socket-state :error)
+     (recur (<! (reconnect-with-backoff)))))
+
+ (loop []
+   (when-let [value (<! (ws :in))]
+     (swap! app-state add-post value)
+     (recur)))
+
+ (swap! app-state assoc :socket-state :disconnected)
+ (log "disconnected")
+ (recur (<! (reconnect-with-backoff))))
 
 (go (when-let [res (<! (GET (str conf/api-base "/posts")))]
       (swap! app-state assoc :posts (apply hash-set res))

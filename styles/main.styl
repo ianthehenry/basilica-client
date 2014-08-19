@@ -122,16 +122,51 @@ code
   background-color: white
   padding: indent-size
 
-#header h1
-  padding: indent-size
+header-height = line-height * 2
+
+status-size = 30px
 
 #header
-  h1
+  height: header-height
+  display: -webkit-flex
+  display: flex
+  -webkit-align-items: stretch
+  align-items: stretch
+  > h1
+    -webkit-flex: 1
+    flex: 1
     font-weight: normal
     font-size: 16pt
-  a
-    text-decoration: none
-    color: text-color
+    > a
+      padding: indent-size
+      display: block
+      text-decoration: none
+      color: text-color
+
+  > #socket-status
+    -webkit-flex-shrink: 0
+    flex-shrink: 0
+    border-radius: status-size * 0.5
+    margin: (header-height - status-size) * 0.5
+    width: status-size
+    line-height: status-size
+    text-align: center
+    font-size: 13pt
+    color: white
+
+    &.error
+      background-color: #c07
+      &::after
+        content: "☁"
+    &.connected
+      background-color: #0c7
+      &::after
+        content: "☀"
+    &.disconnected
+      background-color: #c70
+      &::after
+        content: "☂"
+
 
 loading-size = 100px
 

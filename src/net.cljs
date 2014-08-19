@@ -20,9 +20,9 @@
 (defn request
   ([method url] (request method url nil))
   ([method url data]
-    (let [ch (chan 1)]
-      (xhr/send url (callback ch) method data)
-      ch)))
+   (let [ch (chan 1)]
+     (xhr/send url (callback ch) method data)
+     ch)))
 
 (def GET (partial request "GET"))
 (def POST (partial request "POST"))
@@ -41,6 +41,7 @@
      (let [in (in) out (out) ws (js/WebSocket. uri)]
        (doto ws
          (aset "onopen" (fn []
+           (put! on-connect :success)
            (close! on-connect)
            (go-loop []
              (let [data (<! in)]
@@ -53,9 +54,13 @@
            (when-let [data (-> message .-data js/JSON.parse js->clj keywordize-keys)]
              (put! out data))))
          (aset "onerror" (fn [error]
-           (print "websocket error!")
-           (js/console.log error)))
+           (put! on-connect error)
+           (close! on-connect)))
          (aset "onclose" (fn []
            (close! in)
            (close! out))))
-       (go (<! on-connect) {:uri uri :ws ws :out in :in out})))))
+       (go (let [result (<! on-connect)]
+             (if (= result :success)
+               {:uri uri :ws ws :out in :in out}
+               nil))
+           )))))
