@@ -4,7 +4,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
-   [basilica.conf :as conf]
+   [basilica.utils :as utils]
    [basilica.net :refer [GET connect! POST]]
    [basilica.components :as components]
    [clojure.set :refer [select union]]
@@ -60,7 +60,7 @@
   (string/join "&" (map form-pair kvps)))
 
 (defn path-for [post]
-  (apply str conf/api-base "/posts"
+  (apply utils/api-url "posts"
          (if (nil? post)
            []
            ["/" (post :id)])))
@@ -99,7 +99,7 @@
 
 (defn new-websocket []
   (log "trying to connect...")
-  (connect! (str conf/ws-base "/")))
+  (connect! (utils/ws-url)))
 
 (defn wait [ms]
   (let [c (async/chan)]
@@ -148,7 +148,7 @@
 
 (defn posts-request []
   (let [latest (@app-state :latest-post)]
-    (GET (str conf/api-base "/posts")
+    (GET (utils/api-url "posts")
          (if (nil? latest) nil {:after latest}))))
 
 (defn load-initial-data [res]

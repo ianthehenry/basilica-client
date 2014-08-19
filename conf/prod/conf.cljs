@@ -1,5 +1,8 @@
 (ns basilica.conf)
 
-(def api-base "https://ianthehenry.com/basilica-api")
-(def site-base "https://ianthehenry.com/basilica")
-(def ws-base "wss://ianthehenry.com/basilica-api/deltas")
+(def api-host "https://ianthehenry.com")
+(def api-path ["basilica-api"])
+(def site-host "https://ianthehenry.com")
+(def site-path ["basilica"])
+(def ws-host "wss://ianthehenry.com")
+(def ws-path ["basilica-api" "deltas"])
