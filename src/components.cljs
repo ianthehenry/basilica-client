@@ -139,5 +139,8 @@
    (dom/div #js {:id "header"}
             (dom/h1 nil (dom/a #js {:href conf/site-base} "Basilica"))
             (dom/div (with-classes {:id "socket-status"
+                                    :onTouchStart (fn [e]) ; allows the hover state to work on mobile safari
                                     :title (status-titles socket-state)}
-                       (name socket-state))))))
+                       (name socket-state))
+                     (dom/div (classes "tooltip")
+                              (status-titles socket-state))))))
