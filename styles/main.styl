@@ -294,8 +294,40 @@ loading-size = 100px
   margin-left: -(loading-size * 0.5)
   line-height: loading-size
   text-align: center
-  -webkit-animation: swell 0.5s infinite alternate
-  -webkit-animation-timing-function: ease-in-out
+  -webkit-animation: swell 0.5s infinite alternate ease-in-out
+  &::after
+    width = 10px
+    height = loading-size * 0.8
+    -webkit-animation: spin 5s infinite linear
+
+    position: absolute
+    left: 50%
+    top: 50%
+    content: ""
+    height: height
+    width: width
+    pointer-events: none
+    border-radius: width * 0.5
+    background-color: code-color
+    margin-left: width * -0.5
+    margin-top: height * -0.5
+  &::before
+    width = 10px
+    height = loading-size * 0.8
+    -webkit-animation: spin 4s infinite reverse linear
+
+    position: absolute
+    left: 50%
+    top: 50%
+    content: ""
+    height: height
+    width: width
+    pointer-events: none
+    border-radius: width * 0.5
+    background-color: code-color
+    margin-left: width * -0.5
+    margin-top: height * -0.5
+
 
 @-webkit-keyframes swell
   from
@@ -305,3 +337,10 @@ loading-size = 100px
     transform: scale3d(1.1, 1.1, 1)
     -webkit-transform: scale3d(1.1, 1.1, 1)
 
+@-webkit-keyframes spin
+  from
+    transform: none
+    -webkit-transform: none
+  to
+    transform: rotate3d(0, 0, 1, 360deg)
+    -webkit-transform: rotate3d(0, 0, 1, 360deg)
