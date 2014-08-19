@@ -123,7 +123,7 @@
                          (dom/div (classes "gutter")
                                   (dom/div (classes "avatar"))
                                   (let [child-count (post :count)
-                                        text (if (= child-count 0) "+" (str child-count))]
+                                        text (if expanded "-" (if (= child-count 0) "+" (str child-count)))]
                                     (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)}
                                                   "comments")
                                                 text)))
