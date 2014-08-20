@@ -50,14 +50,20 @@
              {:shared {:post-ch post-ch}
               :target (js/document.getElementById "main")})))
 
+(defn has-prefix [s prefix]
+  (= (.indexOf s prefix) 0))
+
 (def transformer (Html5History.TokenTransformer.))
 (set! (. transformer -createUrl)
       (fn [path prefix location]
         (str prefix "/" (.replace path #"^/" (constantly "")))))
 (set! (. transformer -retrieveToken)
       (fn [prefix location]
-        (.substr (. location -href)
-                 (count prefix))))
+        (let [path (. location -href)]
+          (if (has-prefix path prefix)
+            (.substr path
+                     (count prefix))
+            nil))))
 
 (def hist (Html5History. js/window transformer))
 (events/listen hist EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
@@ -71,7 +77,7 @@
     (let [path (.retrieveToken transformer
                                (.getPathPrefix hist)
                                (.-target e))]
-      (when-not (nil? (secretary/locate-route path))
+      (when-not (or (nil? path) (nil? (secretary/locate-route path)))
         (.preventDefault e)
         (.setToken hist path)))))
 
