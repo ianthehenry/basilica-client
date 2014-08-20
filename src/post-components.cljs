@@ -3,7 +3,7 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [basilica.utils :as utils]
+   [basilica.utils :as utils :refer [classes with-classes]]
    [basilica.autosize :refer [autosize]]
    [clojure.string :as string]
    [clojure.set :refer [select]]
@@ -19,12 +19,6 @@
 
 (defn format [timestamp-string]
   (.calendar (js/moment timestamp-string)))
-
-(defn with-classes [keys & all]
-  (clj->js (into keys {:className (string/join " " all)})))
-
-(defn classes [& all]
-  (apply with-classes {} all))
 
 (defn clear [textarea]
   (set! (. textarea -value) "")

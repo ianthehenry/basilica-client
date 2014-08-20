@@ -3,7 +3,7 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [basilica.utils :as utils]
+   [basilica.utils :as utils :refer [with-classes]]
    [basilica.net :refer [GET connect! POST]]
    [basilica.post-components :as components]
    [clojure.set :refer [select union]]
@@ -188,5 +188,5 @@
                 (om/build components/header-component (app-state :socket-state))
                 (om/build components/root-post-component
                           (app-state :posts)))
-       (dom/div #js {:id "loading"
-                     :className (name (app-state :socket-state))})))))
+       (dom/div (with-classes {:id "loading"}
+                  (name (app-state :socket-state))))))))

@@ -20,3 +20,9 @@
 
 (defn logger [area & msg]
   (apply print (str area) msg))
+
+(defn with-classes [keys & all]
+  (clj->js (into keys {:className (string/join " " all)})))
+
+(defn classes [& all]
+  (apply with-classes {} all))
