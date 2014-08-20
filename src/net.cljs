@@ -44,40 +44,38 @@
                 (map (fn [[k v]] [(name k) v]))
                 form-data)))
 
-; adapted from https://github.com/loganlinn/cljs-websockets-async
-(defn connect!
-  "Connects to a websocket. Returns a channel that, when connected, puts a
-  map with with keys,
-  :uri  The URI connected to
-  :ws   Raw Websocket object
-  :in   Channel to write values to socket on
-  :out  Channel to recieve socket data on"
-  ([uri] (connect! uri {}))
-  ([uri {:keys [in out] :or {in chan out chan}}]
-   (let [on-connect (chan)]
-     (let [in (in) out (out) ws (js/WebSocket. uri)]
-       (doto ws
-         (aset "onopen" (fn []
-           (put! on-connect :success)
-           (close! on-connect)
-           (go-loop []
-             (let [data (<! in)]
-               (if-not (nil? data)
-                 (do (.send ws (-> data clj->js js/JSON.stringify))
-                     (recur))
-                 (do (close! out)
-                     (.close ws)))))))
-         (aset "onmessage" (fn [message]
-           (when-let [data (-> message .-data js/JSON.parse js->clj keywordize-keys)]
-             (put! out data))))
-         (aset "onerror" (fn [error]
-           (put! on-connect error)
-           (close! on-connect)))
-         (aset "onclose" (fn []
-           (close! in)
-           (close! out))))
-       (go (let [result (<! on-connect)]
-             (if (= result :success)
-               {:uri uri :ws ws :out in :in out}
-               nil))
-           )))))
+(defn connect! [uri]
+  (let [on-connect (chan)]
+    (let [from-server (chan) to-server (chan) ws (js/WebSocket. uri)]
+      (doto ws
+        (aset "onopen"
+              (fn []
+                (put! on-connect :success)
+                (close! on-connect)
+                (go-loop
+                 []
+                 (let [data (<! to-server)]
+                   (if-not (nil? data)
+                     (do (.send ws (-> data clj->js js/JSON.stringify))
+                       (recur))
+                     (do (close! from-server)
+                       (.close ws)))))))
+        (aset "onmessage"
+              (fn [message]
+                (when-let [data (-> message .-data js/JSON.parse js->clj keywordize-keys)]
+                  (put! from-server data))))
+        (aset "onerror"
+              (fn [error]
+                ; onclose is fired too,
+                ; if it's open
+                (put! on-connect error)
+                (close! on-connect)))
+        (aset "onclose"
+              (fn []
+                (close! from-server)
+                (close! to-server))))
+      (go (let [result (<! on-connect)]
+            (if (= result :success)
+              {:in from-server :out to-server}
+              nil))
+          ))))

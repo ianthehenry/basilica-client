@@ -9,8 +9,6 @@
    [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]))
 
-(defonce new-posts-ch (async/chan))
-
 (defn update-set [s pred f]
   (let [x (first (select pred s))]
     (-> s
@@ -45,13 +43,17 @@
 (defn next-backoff [current]
   (min (* 2 current) (* 1000 64)))
 
-(defn reconnect-with-backoff []
+(defn reconnect-with-backoff [canceled?]
   (log "reconnecting in" @reconnect-delay-ms "ms...")
   (let [c (async/chan)]
     (go
      (<! (wait @reconnect-delay-ms))
      (swap! reconnect-delay-ms next-backoff)
-     (async/pipe (new-websocket) c))
+     (if (canceled?)
+       (do
+         (log "not reconnecting; canceled")
+         (async/close! c))
+       (async/pipe (new-websocket) c)))
     c))
 
 (defn get-title []
@@ -91,77 +93,93 @@
      load-more-data
      load-initial-data) cursor res))
 
+(defn safe-close! [ch]
+  (when-not (nil? ch)
+    (async/close! ch)))
+
 (defn listen-to-sockets [load-data posts-request]
-  (let [status-ch (async/chan)]
+  (let [status-ch (async/chan)
+        delta-ch (async/chan)
+        canceled-atom (atom false)
+        ws-out-ch (atom nil)
+        cancel-fn (fn []
+                    (log "canceling")
+                    (reset! canceled-atom true)
+                    (async/close! delta-ch)
+                    (async/close! status-ch)
+                    (safe-close! @ws-out-ch))
+        reconnect-maybe (fn []
+                          (if-not @canceled-atom
+                            (reconnect-with-backoff #(deref canceled-atom))
+                            (doto (async/chan) (async/close!))))]
     (go-loop
      [ws (<! (new-websocket))]
-     (if ws
+     (if @canceled-atom
+       (safe-close! @ws-out-ch)
        (do
-         (reset! reconnect-delay-ms min-reconnect)
-         (log "connected")
-         (async/put! status-ch :connected))
-       (do
-         (log "failed to connect")
-         (async/put! status-ch :error)
-         (recur (<! (reconnect-with-backoff)))))
+         (if ws
+           (do
+             (reset! reconnect-delay-ms min-reconnect)
+             (log "connected")
+             (async/put! status-ch :connected)
+             (reset! ws-out-ch (ws :out)))
+           (do
+             (log "failed to connect")
+             (async/put! status-ch :error)
+             (reset! ws-out-ch nil)
+             (recur (<! (reconnect-maybe)))))
 
-     (log "requesting data")
-     (if-let [res (<! (posts-request))]
-       (do
-         (log "data load complete")
-         (load-data res))
-       (js/alert "a wild network inconsistency appears! please tell ian so he can fix the server"))
+         (log "requesting data")
+         (if-let [res (<! (posts-request))]
+           (do
+             (log "data load complete")
+             (load-data res))
+           (js/alert "a wild network inconsistency appears! please tell ian so he can fix the server"))
 
-     (loop []
-       (when-let [value (<! (ws :in))]
-         (async/put! new-posts-ch value)
-         (recur)))
+         (loop []
+           (when-let [value (<! (ws :in))]
+             (async/put! delta-ch value)
+             (recur)))
 
-     (async/put! status-ch :disconnected)
-     (log "disconnected")
-     (recur (<! (reconnect-with-backoff))))
-    status-ch))
+         (async/put! status-ch :disconnected)
+         (log "disconnected")
+         (recur (<! (reconnect-maybe)))))
+     (log "canceled"))
+    [status-ch delta-ch cancel-fn]))
 
-(defn keep-sockets-shiny [cursor]
-  (let [status-ch (listen-to-sockets (partial load-data cursor)
-                                     #(posts-request (@cursor :latest-post)))]
-    (go-loop []
-             (om/update! cursor :socket-state (<! status-ch))
+(defn keep-sockets-shiny [cursor status-ch]
+  (go-loop []
+           (when-let [status (<! status-ch)]
+             (om/update! cursor :socket-state status)
              (recur))))
 
-(defn absorb-incoming-posts [cursor]
+(defn absorb-incoming-posts [cursor delta-ch]
   (go-loop
    []
-   (let [post (<! new-posts-ch)]
+   (when-let [post (<! delta-ch)]
      (om/transact! cursor :posts #(add-post % post))
      (om/transact! cursor :latest-post #(safe-max % (post :id)))
      (when-not (js/document.hasFocus)
-       (set-unread-stuff!)))
-   (recur)))
-
-(defn upload-posts [post-ch]
-  (go-loop
-   []
-   (when-let [{:keys [text post]} (<! post-ch)]
-     (let [res (<! (POST (utils/api-url "posts" (:id post))
-                         {:by "anon" :content text}))]
-       (if res
-         (print "created post: " res)
-         (print "failed to create post!")))
-     (recur))
-   (print "post channel closed!")))
+       (set-unread-stuff!))
+     (recur))))
 
 (defn app-component [app-state owner]
   (reify
-    om/IWillMount
-    (will-mount
+    om/IInitState
+    (init-state [_] {:on-stop identity})
+    om/IDidMount
+    (did-mount
      [_]
-     ; TODO: clean all of this
-     ; up on did-unmount
-
-     (keep-sockets-shiny app-state)
-     (absorb-incoming-posts app-state)
-     (upload-posts (om/get-shared owner :post-ch)))
+     (let [[status-ch delta-ch stop-fn]
+           (listen-to-sockets (partial load-data app-state)
+                              #(posts-request (@app-state :latest-post)))]
+       (keep-sockets-shiny app-state status-ch)
+       (absorb-incoming-posts app-state delta-ch)
+       (om/set-state! owner :on-stop stop-fn)))
+    om/IWillUnmount
+    (will-unmount
+     [_]
+     ((om/get-state owner :on-stop)))
     om/IRender
     (render
      [_]

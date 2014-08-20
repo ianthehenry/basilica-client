@@ -5,6 +5,7 @@
    [om.dom :as dom :include-macros true]
    [clojure.string :as string]
    [basilica.utils :as utils]
+   [basilica.net :refer [POST]]
    [basilica.posts :as posts]
    [basilica.signup :as signup]
    [cljs.core.async :as async :refer [<!]]
@@ -22,11 +23,26 @@
            nil
            {:target (js/document.getElementById "main")}))
 
+(defn upload-posts [post-ch]
+  (go-loop
+   []
+   (when-let [{:keys [text post]} (<! post-ch)]
+     (let [res (<! (POST (utils/api-url "posts" (:id post))
+                         {:by "anon" :content text}))]
+       (if res
+         (print "created post: " res)
+         (print "failed to create post!")))
+     (recur))
+   (print "post channel closed!")))
+
 (let [post-ch (async/chan)
       app-state (atom {:posts #{}
                        :latest-post nil
                        :loaded false
                        :socket-state :disconnected})]
+
+  (upload-posts post-ch)
+
   (defroute "*path" [path]
     (print "path: " (path-from path))
     (om/root posts/app-component
