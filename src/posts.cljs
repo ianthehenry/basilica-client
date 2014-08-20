@@ -86,7 +86,7 @@
 (defn load-more-data [cursor res]
   (doto cursor
     (om/transact! :posts #(union % (apply hash-set res)))
-    (om/update! :latest-post (-> res first :id))))
+    (om/transact! :latest-post #(-> res first :id (safe-max %)))))
 
 (defn load-data [cursor res]
   ((if (@cursor :loaded)
