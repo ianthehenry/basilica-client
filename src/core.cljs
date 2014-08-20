@@ -51,7 +51,8 @@
               :target (js/document.getElementById "main")})))
 
 (def transformer (Html5History.TokenTransformer.))
-(aset transformer "createUrl" (fn [path prefix location] path))
+(aset transformer "createUrl" (fn [path prefix location]
+                                (str prefix "/" (.replace path #"^/" (constantly "")))))
 (aset transformer "retrieveToken" (fn [prefix location] (.substr (. location -href) (count prefix))))
 
 (def hist (Html5History. js/window transformer))
@@ -63,7 +64,9 @@
 
 (defn onclick [e]
   (when (instance? js/HTMLAnchorElement (.-target e))
-    (let [path (.getPath (uri/parse (.-href (.-target e))))]
+    (let [path (.retrieveToken transformer
+                               (.getPathPrefix hist)
+                               (.-target e))]
       (when-not (nil? (secretary/locate-route path))
         (.preventDefault e)
         (.setToken hist path)))))
