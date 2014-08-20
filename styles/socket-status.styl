@@ -1,0 +1,52 @@
+#socket-status
+  flex-fixed()
+  border-radius: status-size * 0.5
+  margin: (header-height - status-size) * 0.5
+  margin-right: 0
+  width: status-size
+  line-height: status-size
+  text-align: center
+  font-size: 13pt
+  color: white
+  position: relative
+
+  &:hover .tooltip
+  &:active .tooltip
+    visibility: visible
+  .tooltip
+    visibility: hidden
+    tooltip-background = rgba(0, 0, 0, 0.75)
+    position: absolute
+    right: 100%
+    padding: (status-size - line-height) * 0.5 0.5em
+    margin-right: (status-size * 0.5) + 5px
+    white-space: nowrap
+    background-color: tooltip-background
+    color: #f0f0f0
+    font-size: 10pt
+    &:after
+      left: 100%
+      top: 50%
+      border: solid transparent
+      content: " "
+      height: 0
+      width: 0
+      position: absolute
+      pointer-events: none
+      border-color: transparent
+      border-left-color: tooltip-background
+      border-width: (status-size * 0.5)
+      margin-top: -(status-size * 0.5)
+
+  &.error
+    background-color: #c07
+    &::after
+      content: "☢"
+  &.connected
+    background-color: #0c7
+    &::after
+      content: "☯"
+  &.disconnected
+    background-color: #c70
+    &::after
+      content: "☂"

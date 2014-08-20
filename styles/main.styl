@@ -1,10 +1,5 @@
 @charset "UTF-8"
 
-*
-  margin: 0
-  padding: 0
-  box-sizing: border-box
-
 button-color = #ccc
 line-height = 24px
 font = 16px 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, sans-serif
@@ -15,29 +10,18 @@ code-color = #eee
 text-color = #333
 alley-inset = 0.3em
 highlight-color = #5af
-
 gutter-size = line-height
 
-flex()
-  display: -webkit-flex
-  display: flex
+@import "helpers"
 
-flex-vertical()
-  flex()
-  -webkit-flex-direction: column
-  flex-direction: column
+*
+  margin: 0
+  padding: 0
+  box-sizing: border-box
+  line-height: line-height
 
-flex-fixed()
-  -webkit-flex-shrink: 0
-  flex-shrink: 0
-
-flex-stretch()
-  -webkit-flex-grow: 1
-  flex-grow: 1
-
-flex-spaced()
-  -webkit-justify-content: space-between
-  justify-content: space-between
+h1, h2, h3, h4, h5, h6
+  line-height: 100%
 
 html
   background-color: code-color
@@ -56,51 +40,13 @@ body, textarea
   color: text-color
   font: font
 
-*
-  line-height: line-height
-
-h1, h2, h3, h4, h5, h6
-  line-height: 100%
-
 a
   color: #07c
   &:visited
     color: #4a6b82
 
 .post
-  > .this-post
-    flex()
-    > .gutter
-      flex-fixed()
-      flex-vertical()
-      flex-spaced()
-      > *
-        width: gutter-size
-        height: gutter-size
-      background-color: code-color
-    > .alley
-      flex-stretch()
-      padding-left: alley-inset
-
-  .avatar
-    text-align: center
-    &::after
-      content: "☃"
-
-  .toggle-button
-    background-color: code-color
-    &:hover
-      background-color: darken(code-color, 10%)
-    &:active
-      background-color: darken(code-color, 20%)
-
-  .header
-    font: 10pt Helvetica
-    a
-      color: #888
-      text-decoration: none
-    a:hover
-      text-decoration: underline
+  @import "post"
 
 code
   font: 13px Menlo, Consolas, monospace
@@ -108,42 +54,7 @@ code
   padding: 0 0.2em
 
 .markdown
-  * + p, * + ul, * + pre, * + ol,
-  * + h1, * + h2, * + h3, * + h4,
-  * + h5, * + h6, * + table, * + img,
-  * + hr, * + blockquote
-    margin-top: 0.5em
-  ul
-    padding-left: 1em
-    list-style: disc
-  li > ul, li > ol
-    margin-top: 0
-  table
-    border-collapse: collapse
-    border-spacing: 0
-    border: solid 1px line-color
-    td, th
-      padding: 0.5em
-      border: solid 1px line-color
-  img, pre
-    max-width: 100%
-  img
-    max-height: 400px
-  hr
-    height: 1px
-    background-color: line-color
-    border: none
-  pre
-    overflow-x: auto
-    padding: 0.5em
-    background-color: code-color
-    > code
-      background-color: transparent
-      padding: 0
-  blockquote
-    color: #777
-    border-left: solid 3px line-color
-    padding-left: indent-size
+  @import "markdown"
 
 .children .children
   guide-width = 2px
@@ -182,83 +93,8 @@ status-size = 30px
       text-decoration: none
       color: text-color
 
-  > #socket-status
-    flex-fixed()
-    border-radius: status-size * 0.5
-    margin: (header-height - status-size) * 0.5
-    margin-right: 0
-    width: status-size
-    line-height: status-size
-    text-align: center
-    font-size: 13pt
-    color: white
-    position: relative
-
-    &:hover .tooltip
-    &:active .tooltip
-      visibility: visible
-    .tooltip
-      visibility: hidden
-      tooltip-background = rgba(0, 0, 0, 0.75)
-      position: absolute
-      right: 100%
-      padding: (status-size - line-height) * 0.5 0.5em
-      margin-right: (status-size * 0.5) + 5px
-      white-space: nowrap
-      background-color: tooltip-background
-      color: #f0f0f0
-      font-size: 10pt
-      &:after
-        left: 100%
-        top: 50%
-        border: solid transparent
-        content: " "
-        height: 0
-        width: 0
-        position: absolute
-        pointer-events: none
-        border-color: transparent
-        border-left-color: tooltip-background
-        border-width: (status-size * 0.5)
-        margin-top: -(status-size * 0.5)
-
-    &.error
-      background-color: #c07
-      &::after
-        content: "☢"
-    &.connected
-      background-color: #0c7
-      &::after
-        content: "☯"
-    &.disconnected
-      background-color: #c70
-      &::after
-        content: "☂"
-
-.add-post
-  flex()
-  textarea
-    &:focus
-      border-color: highlight-color
-    flex-stretch()
-    min-height: line-height * 1.5
-    height: line-height * 1.5
-    outline: none
-    box-sizing: border-box
-    border-color: line-color
-    resize: none
-    padding: line-height * 0.25
-    &::-webkit-input-placeholder
-      font-size: 10pt
-      line-height: line-height
-      color: line-color
-    border-right: none
-  button
-    font-size: 10pt
-    &::after
-      content: "→"
-    width: line-height * 1.5
-    flex-fixed()
+@import "socket-status"
+@import "add-post"
 
 button
   color: darken(line-color, 30%)
@@ -280,34 +116,4 @@ button
     border-color: darken(line-color, 20%)
     background-color: darken(code-color, 10%)
 
-loading-size = 80px
-
-#loading
-  border-radius: loading-size * 0.5
-  background-color: #ccc
-  color: code-color
-  width: loading-size
-  height: loading-size
-  position: absolute
-  top: 50%
-  left: 50%
-  margin-top: -(loading-size * 0.5)
-  margin-left: -(loading-size * 0.5)
-  line-height: loading-size
-  text-align: center
-  -webkit-animation: swell 0.5s infinite alternate ease-in-out
-  font-size: loading-size * 0.75
-  &.error
-    -webkit-animation: none
-    &::after
-      content: "☹"
-  &.connected::after
-    content: "⋯"
-
-@-webkit-keyframes swell
-  from
-    transform: none
-    -webkit-transform: none
-  to
-    transform: scale3d(1.1, 1.1, 1)
-    -webkit-transform: scale3d(1.1, 1.1, 1)
+@import "loading"

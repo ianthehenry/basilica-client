@@ -3,13 +3,12 @@ exports.config =
     assets: /^static\/dev/
   paths:
     public: 'out/dev'
-    watched: ['styles', 'static/dev']
+    watched: ['styles/main.styl', 'static/dev']
   files:
     javascripts:
       joinTo:
         'vendor.js': /^bower_components/
-    stylesheets:
-      joinTo: 'main.css'
+    stylesheets: joinTo: 'main.css'
   overrides:
     production:
       conventions:
@@ -18,4 +17,4 @@ exports.config =
       optimize: true
       paths:
         public: 'out/prod'
-        watched: ['styles', 'static/prod']
+        watched: ['styles/main.styl', 'static/prod']

@@ -1,0 +1,58 @@
+> * + *
+  margin-top: 0.5em
+
+h1, h2, h3, h4, h5, h6
+  font: font
+  font-weight: bold
+
+h1::before
+  content: "# "
+h2::before
+  content: "## "
+h3::before
+  content: "### "
+h4::before
+  content: "#### "
+h5::before
+  content: "##### "
+h6::before
+  content: "###### "
+
+ul
+  padding-left: 1em
+  list-style: disc
+
+li > ul, li > ol
+  margin-top: 0
+
+table
+  border-collapse: collapse
+  border-spacing: 0
+  border: solid 1px line-color
+  td, th
+    padding: 0.5em
+    border: solid 1px line-color
+
+img, pre
+  max-width: 100%
+
+img
+  max-height: 400px
+
+hr
+  height: 1px
+  background-color: line-color
+  border: none
+
+pre
+  overflow-x: auto
+  padding: 0.5em
+  background-color: code-color
+  > code
+    background-color: transparent
+    padding: 0
+
+blockquote
+  color: #777
+  border-left: solid 3px line-color
+  padding-left: indent-size

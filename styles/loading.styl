@@ -1,0 +1,31 @@
+loading-size = 80px
+
+#loading
+  border-radius: loading-size * 0.5
+  background-color: #ccc
+  color: code-color
+  width: loading-size
+  height: loading-size
+  position: absolute
+  top: 50%
+  left: 50%
+  margin-top: -(loading-size * 0.5)
+  margin-left: -(loading-size * 0.5)
+  line-height: loading-size
+  text-align: center
+  -webkit-animation: swell 0.5s infinite alternate ease-in-out
+  font-size: loading-size * 0.75
+  &.error
+    -webkit-animation: none
+    &::after
+      content: "☹"
+  &.connected::after
+    content: "⋯"
+
+@-webkit-keyframes swell
+  from
+    transform: none
+    -webkit-transform: none
+  to
+    transform: scale3d(1.1, 1.1, 1)
+    -webkit-transform: scale3d(1.1, 1.1, 1)
