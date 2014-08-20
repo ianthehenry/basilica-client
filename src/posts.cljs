@@ -163,6 +163,26 @@
        (set-unread-stuff!))
      (recur))))
 
+(defn upload-posts [post-ch get-username]
+  (go-loop
+   []
+   (when-let [{:keys [text post]} (<! post-ch)]
+     (let [res (<! (POST (utils/api-url "posts" (:id post))
+                         {:by (get-username) :content text}))]
+       (if res
+         (print "created post: " res)
+         (print "failed to create post!")))
+     (recur))))
+
+(defn username-component [app-state owner]
+  (om/component
+   (dom/div #js {:id "username-picker"}
+            "post as: "
+            (dom/input #js {:type "text"
+                            :value (app-state :username)
+                            :onChange #(om/update! app-state :username (.. % -target -value))
+                            }))))
+
 (defn app-component [app-state owner]
   (reify
     om/IInitState
@@ -175,17 +195,22 @@
                               #(posts-request (@app-state :latest-post)))]
        (keep-sockets-shiny app-state status-ch)
        (absorb-incoming-posts app-state delta-ch)
-       (om/set-state! owner :on-stop stop-fn)))
+       (om/set-state! owner :on-stop stop-fn))
+
+     (upload-posts (om/get-shared owner :post-ch)
+                   #(@app-state :username)))
     om/IWillUnmount
     (will-unmount
      [_]
-     ((om/get-state owner :on-stop)))
+     ((om/get-state owner :on-stop))
+     (async/close! (om/get-shared owner :post-ch)))
     om/IRender
     (render
      [_]
      (if (app-state :loaded)
        (dom/div nil
                 (om/build components/header-component (app-state :socket-state))
+                (om/build username-component app-state)
                 (om/build components/root-post-component
                           (app-state :posts)))
        (dom/div (with-classes {:id "loading"}
