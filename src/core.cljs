@@ -51,9 +51,13 @@
               :target (js/document.getElementById "main")})))
 
 (def transformer (Html5History.TokenTransformer.))
-(aset transformer "createUrl" (fn [path prefix location]
-                                (str prefix "/" (.replace path #"^/" (constantly "")))))
-(aset transformer "retrieveToken" (fn [prefix location] (.substr (. location -href) (count prefix))))
+(set! (. transformer -createUrl)
+      (fn [path prefix location]
+        (str prefix "/" (.replace path #"^/" (constantly "")))))
+(set! (. transformer -retrieveToken)
+      (fn [prefix location]
+        (.substr (. location -href)
+                 (count prefix))))
 
 (def hist (Html5History. js/window transformer))
 (events/listen hist EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
