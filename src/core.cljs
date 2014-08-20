@@ -46,9 +46,10 @@
   (.setEnabled true))
 
 (defn onclick [e]
-  (let [path (.getPath (uri/parse (.-href (.-target e))))]
-    (when-not (nil? (secretary/locate-route path))
-      (.preventDefault e)
-      (.setToken hist path))))
+  (when (instance? js/HTMLAnchorElement (.-target e))
+    (let [path (.getPath (uri/parse (.-href (.-target e))))]
+      (when-not (nil? (secretary/locate-route path))
+        (.preventDefault e)
+        (.setToken hist path)))))
 
 (events/listen js/document "click" onclick)
