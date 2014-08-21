@@ -34,18 +34,21 @@
 ; - have a code, requesting a token
 ; - got a token, redirecting to the homepage
 
-(defn attached-button [owner on-submit type]
-  (dom/div (classes "attached-button")
-           (dom/input #js {:type type
-                           :ref "input"
-                           :onKeyDown (key-down on-submit)})
-           (dom/button #js {:onClick (mouse-down on-submit
-                                                 #(om/get-node owner "input"))})))
+(defn attached-button
+  ([owner ref-name on-submit type] (attached-button owner ref-name on-submit type ""))
+  ([owner ref-name on-submit type text]
+   (dom/div (classes "attached-button")
+            (dom/input #js {:type type
+                            :ref ref-name
+                            :defaultValue text
+                            :onKeyDown (key-down on-submit)})
+            (dom/button #js {:onClick (mouse-down on-submit
+                                                  #(om/get-node owner ref-name))}))))
 
 (defn awaiting-email [next owner]
   [(dom/h1 nil "Well met, friend")
    (dom/p nil "What did you say your email address was?")
-   (attached-button owner next "email")])
+   (attached-button owner "a" next "email")])
 
 (defn sending-email [email owner]
   [(dom/h1 nil "Sending...")
@@ -56,52 +59,85 @@
   [(dom/h1 nil "Email sent")
    (dom/p nil "Probably. If " email " was a real account, anyway.")
    (dom/p nil "Enter the code below:")
-   (attached-button owner next "text")])
+   (attached-button owner "a" next "text")])
 
 (defn requesting-token [owner]
   [(dom/h1 nil "Logging in...")
    (dom/p nil "Let's see if you belong here.")
    (dom/progress nil)])
 
-(def states {:awaiting-email awaiting-email
-             :sending-email sending-email
-             :awaiting-code awaiting-code
-             :requesting-token requesting-token
-             })
+(defn error [owner]
+  [(dom/h1 nil "Error")
+   (dom/p nil "Something went horribly wrong. Tell Ian.")])
 
-(defn root-component [app-state owner]
-  (reify
-    om/IInitState
-    (init-state [_] {:state :awaiting-email
-                     :email-address nil})
-    om/IRenderState
-    (render-state
-     [_ {:keys [state email-address]}]
+(defn bad-code [email retry-code retry-token owner]
+  [(dom/h1 nil "Bad code")
+   (dom/p nil "We fed the code into the machine but no token came out.")
+   (dom/p nil "Note that a code can only be used one time, and they expire after a few minutes.")
+   (dom/p nil "You can re-enter it here:")
+   (attached-button owner "a" retry-token "text")
+   (dom/p nil "Or request a new code:")
+   (attached-button owner "b" retry-code "email" email)])
 
-     (let [get-email (fn [email]
-                       (om/set-state! owner :email-address email)
-                       (om/set-state! owner :state :sending-email)
-                       (go (let [[status-code _] (<! (request-code email))]
-                             ; TODO: check status code
-                             (<! (async/timeout 1000))
-                             (om/set-state! owner :state :awaiting-code)
-                             )))
-           get-token (fn [code]
-                       (om/set-state! owner :state :requesting-token)
-                       (go (let [[status-code token] (<! (request-token code))]
-                             ; TODO: check status code
-                             (<! (async/timeout 1000))
-                             (print "logged in" token)
-                             (utils/navigate-to "/")
-                             )))
-           f ({:awaiting-email (partial awaiting-email get-email)
-               :sending-email (partial sending-email email-address)
-               :awaiting-code (partial awaiting-code email-address get-token)
-               :requesting-token requesting-token} state)]
+(defn root-component [code owner]
+  (letfn [(get-code [email]
+                    (om/set-state! owner :email-address email)
+                    (om/set-state! owner :state :sending-email)
+                    (go (let [[status-code _] (<! (request-code email))]
+                          (<! (async/timeout 1000))
+                          (om/set-state! owner
+                                         :state
+                                         (if (= status-code 200)
+                                           :awaiting-code
+                                           :error))
+                          )))
+          (get-token [code]
+                     (om/set-state! owner :state :requesting-token)
+                     (go (let [[status-code token] (<! (request-token code))]
+                           (<! (async/timeout 1000))
+                           (cond
+                            (= status-code 200)
+                            (do
+                              (print "logged in" token)
+                              (utils/navigate-to "/"))
+                            (= status-code 401)
+                            (do
+                              (print "bad code")
+                              (om/set-state! owner :state :bad-code))
+                            :else (om/set-state owner :state :error))
+                           )))
+          (focus-input []
+                       (let [node (om/get-node owner)
+                             inputs (.getElementsByTagName node "input")
+                             input (aget inputs 0)]
+                         (when input (.focus input))))]
+    (reify
+      om/IInitState
+      (init-state [_] {:state :awaiting-email
+                       :email-address nil})
+      om/IWillMount
+      (will-mount
+       [_]
+       (when-not (nil? code)
+         (get-token code)))
+      om/IDidMount
+      (did-mount [_] (focus-input))
+      om/IDidUpdate
+      (did-update [_ _ _] (focus-input))
+      om/IRenderState
+      (render-state
+       [_ {:keys [state email-address]}]
 
-       (dom/div (classes "auth")
-                (apply dom/div
-                       (classes "message")
-                       (f owner))
-                (dom/a #js {:href (utils/site-url)} "give up on your hopes, dreams")
-                )))))
+       (let [f ({:awaiting-email (partial awaiting-email get-code)
+                 :sending-email (partial sending-email email-address)
+                 :awaiting-code (partial awaiting-code email-address get-token)
+                 :requesting-token requesting-token
+                 :bad-code (partial bad-code email-address get-code get-token)
+                 :error error} state)]
+
+         (dom/div (classes "auth")
+                  (apply dom/div
+                         (classes "message")
+                         (f owner))
+                  (dom/a #js {:href (utils/site-url)} "give up on your hopes, dreams")
+                  ))))))

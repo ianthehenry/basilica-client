@@ -12,16 +12,15 @@
 (defn path-from [s]
   (remove #(= "" %) (string/split s #"/")))
 
-(defroute "/signup" [path]
+(defroute "/signup" []
   (print "signup!")
   (om/root signup/root-component
            nil
            {:target (js/document.getElementById "main")}))
 
-(defroute "/login" [path]
-  (print "login!")
+(defroute "/login" [query-params]
   (om/root login/root-component
-           nil
+           (:code query-params)
            {:target (js/document.getElementById "main")}))
 
 (let [app-state (atom {:posts #{}

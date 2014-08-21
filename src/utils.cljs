@@ -52,7 +52,7 @@
   (.setUseFragment false)
   (.setPathPrefix (site-url)))
 
-(events/listen hist EventType/NAVIGATE #(do (print (.-token %)) (secretary/dispatch! (.-token %))))
+(events/listen hist EventType/NAVIGATE #(secretary/dispatch! (.-token %)))
 
 (defn navigate-to [path]
   (.setToken hist path))
