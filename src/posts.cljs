@@ -33,11 +33,6 @@
   (log "trying to connect...")
   (connect! (utils/ws-url)))
 
-(defn wait [ms]
-  (let [c (async/chan)]
-    (js/setTimeout #(async/close! c) ms)
-    c))
-
 (def min-reconnect 1000)
 (defonce reconnect-delay-ms (atom min-reconnect))
 (defn next-backoff [current]
@@ -47,7 +42,7 @@
   (log "reconnecting in" @reconnect-delay-ms "ms...")
   (let [c (async/chan)]
     (go
-     (<! (wait @reconnect-delay-ms))
+     (<! (async/timeout @reconnect-delay-ms))
      (swap! reconnect-delay-ms next-backoff)
      (if (canceled?)
        (do
@@ -130,11 +125,14 @@
              (recur (<! (reconnect-maybe)))))
 
          (log "requesting data")
-         (if-let [res (<! (posts-request))]
-           (do
-             (log "data load complete")
-             (load-data res))
-           (js/alert "a wild network inconsistency appears! please tell ian so he can fix the server"))
+         (let [[code res] (<! (posts-request))]
+           (if (= code 200)
+             (do
+               (log "data load complete")
+               (load-data res))
+             (do
+               (log "failed to load data")
+               (js/alert "a wild network inconsistency appears! please tell ian so he can fix the server"))))
 
          (loop []
            (when-let [value (<! (ws :in))]
@@ -167,11 +165,11 @@
   (go-loop
    []
    (when-let [{:keys [text post]} (<! post-ch)]
-     (let [res (<! (POST (utils/api-url "posts" (:id post))
-                         {:by (get-username) :content text}))]
-       (if res
+     (let [[code res] (<! (POST (utils/api-url "posts" (:id post))
+                                {:by (get-username) :content text}))]
+       (if (= code 200)
          (print "created post: " res)
-         (print "failed to create post!")))
+         (print "failed to create post with code:" code "response:" res)))
      (recur))))
 
 (defn username-component [app-state owner]

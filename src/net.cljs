@@ -8,16 +8,18 @@
    [clojure.string :as string]
    ))
 
+(defn get-response [res]
+  (if (= (.getResponseHeader res "Content-Type")
+         "application/json")
+    (-> res .getResponseJson js->clj keywordize-keys)
+    (.getResponseText res)))
+
 (defn callback [ch]
   (fn [event]
-    (let [code (-> event .-target .getStatus)]
-      (if (= code 200)
-        (let [res (-> event .-target .getResponseJson js->clj keywordize-keys)]
-          (go (>! ch res)
-              (close! ch)))
-        (do
-          (print "Error!")
-          (close! ch))))))
+    (let [code (.. event -target getStatus)
+          res (get-response (. event -target))]
+      (go (>! ch [code res])
+          (close! ch)))))
 
 (defn request
   ([method url] (request method url nil))
