@@ -36,7 +36,7 @@ body
     padding: line-height * 0.5
     padding-top: 0
 
-body, textarea
+body, textarea, input
   color: text-color
   font: font
 
@@ -117,14 +117,31 @@ button
     background-color: darken(code-color, 10%)
 
 @import "loading"
-@import "signup"
+@import "auth"
 
 #username-picker
   padding: 0 indent-size
   padding-bottom: indent-size * 0.5
   input
-    border: solid 1px line-color
-    outline: none
+    font-size: 10pt
+    height: line-height
+    vertical-align: top
     padding: 0 0.5em
-    &:focus
-      border-color: highlight-color
+
+textarea, input[type=text], input[type=email]
+  outline: none
+  border: solid 1px line-color
+  border-color: line-color
+  &:focus
+    border-color: highlight-color
+
+.attached-button
+  flex()
+  :first-child
+    flex-stretch()
+    border-right: none
+  button
+    font-size: 10pt
+    &::after
+      content: "→"
+    flex-fixed()

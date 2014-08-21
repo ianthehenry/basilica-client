@@ -56,7 +56,7 @@
     om/IRender
     (render
      [_]
-     (dom/div (classes "add-post")
+     (dom/div (classes "add-post" "attached-button")
               (dom/textarea #js {:placeholder "⌘↵ to submit"
                                  :ref "input"
                                  :onChange #(autosize (. % -target))

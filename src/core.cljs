@@ -7,6 +7,7 @@
    [basilica.utils :as utils]
    [basilica.posts :as posts]
    [basilica.signup :as signup]
+   [basilica.login :as login]
    [cljs.core.async :as async :refer [<!]]
    [secretary.core :as secretary :include-macros true :refer [defroute]]
    [goog.Uri :as uri]
@@ -19,6 +20,11 @@
 
 (defroute "/signup" [path]
   (om/root signup/root-component
+           nil
+           {:target (js/document.getElementById "main")}))
+
+(defroute "/login" [path]
+  (om/root login/root-component
            nil
            {:target (js/document.getElementById "main")}))
 

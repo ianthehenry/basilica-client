@@ -11,7 +11,7 @@
 
 (defn root-component [app-state owner]
   (om/component
-   (dom/div #js {:id "signup"}
+   (dom/div (classes "auth")
             (dom/div (classes "message")
                      (dom/h1 nil
                              "Basilica is currently "
