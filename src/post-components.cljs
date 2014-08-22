@@ -84,31 +84,30 @@
 
 (declare post-component)
 
-(defn render-post-children [on-post children all-posts]
+(defn make-submit-handler [post-ch id-parent]
+  (fn [text]
+    (when-not (= text "")
+      (put! post-ch {:id-parent id-parent :text text}))))
+
+(defn render-post-children [post-ch id-parent all-posts]
   (let [build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child all-posts]
-                                {:react-key id-child}))]
+                                {:react-key id-child
+                                 :opts {:post-ch post-ch}}))
+        children (->> all-posts
+                      (select #(= (% :idParent) id-parent))
+                      (sort-by :id >))]
     (apply dom/div (classes "children")
-           (om/build add-post-component on-post)
+           (om/build add-post-component
+                     (make-submit-handler post-ch id-parent))
            (map build-child children))))
 
-(defn make-submit-handler [owner post]
-  (fn [text]
-    (when-not (= text "")
-      (put! (om/get-shared owner :post-ch) {:post post, :text text}))))
-
-(defn root-post-component [posts owner]
+(defn root-post-component [posts owner {:keys [post-ch]}]
   (om/component
-   (let [children (->> posts
-                       (select (comp nil? :idParent))
-                       (sort-by :id >))]
-     (render-post-children (make-submit-handler owner nil)
-                           children
-                           posts)
-     )))
+   (render-post-children post-ch nil posts)))
 
-(defn post-component [[id-post posts] owner]
+(defn post-component [[id-post posts] owner {:keys [post-ch]}]
   (reify
     om/IInitState
     (init-state [_] {:expanded false})
@@ -117,10 +116,7 @@
      [_ {:keys [expanded]}]
      (let [post (->> posts
                      (select #(= (% :id) id-post))
-                     first)
-           children (->> posts
-                         (select #(= (% :idParent) id-post))
-                         (sort-by :id >))]
+                     first)]
        (dom/div (classes "post" (if expanded "expanded" "collapsed"))
                 (dom/div (classes "this-post")
                          (dom/div (classes "gutter")
@@ -134,9 +130,7 @@
                                   (render-post-header post)
                                   (render-post-body post)))
                 (if expanded
-                  (render-post-children (make-submit-handler owner post)
-                                        children
-                                        posts)))
+                  (render-post-children post-ch (post :id) posts)))
        ))))
 
 (def status-tooltips {:disconnected "reconnecting..."
@@ -147,6 +141,9 @@
   (om/component
    (dom/div #js {:id "header"}
             (dom/h1 nil (dom/a #js {:href (utils/site-url)} "Basilica"))
+            (dom/a (with-classes {:href (utils/site-url "login")}
+                     "nav-link")
+                   "log in")
             (dom/a (with-classes {:href (utils/site-url "signup")}
                      "nav-link")
                    "get in on this")

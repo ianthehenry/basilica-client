@@ -79,7 +79,7 @@
    (dom/p nil "Or request a new code:")
    (attached-button owner "b" retry-code "email" email)])
 
-(defn root-component [code owner]
+(defn root-component [app-state owner {:keys [code]}]
   (letfn [(get-code [email]
                     (om/set-state! owner :email-address email)
                     (om/set-state! owner :state :sending-email)
@@ -99,6 +99,8 @@
                             (= status-code 200)
                             (do
                               (print "logged in" token)
+                              (om/update! app-state :token token)
+                              (om/update! app-state :user (token :user))
                               (utils/navigate-to "/"))
                             (= status-code 401)
                             (do
@@ -120,10 +122,8 @@
        [_]
        (when-not (nil? code)
          (get-token code)))
-      om/IDidMount
-      (did-mount [_] (focus-input))
-      om/IDidUpdate
-      (did-update [_ _ _] (focus-input))
+      om/IDidMount (did-mount [_] (focus-input))
+      om/IDidUpdate (did-update [_ _ _] (focus-input))
       om/IRenderState
       (render-state
        [_ {:keys [state email-address]}]

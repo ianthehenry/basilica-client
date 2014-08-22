@@ -2,6 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require
    [goog.net.XhrIo :as xhr]
+   [basilica.state :refer [app-state]]
    [clojure.walk :refer [keywordize-keys]]
    [cljs.core.async :as async :refer [chan close! <! >! put!]]
    [goog.Uri :as uri]
@@ -24,8 +25,10 @@
 (defn request
   ([method url] (request method url nil))
   ([method url data]
-   (let [ch (chan 1)]
-     (xhr/send url (callback ch) method data)
+   (let [ch (chan 1)
+         token (@app-state :token)
+         headers nil #_ (if token #js {"X-Token" token} nil)]
+     (xhr/send url (callback ch) method data headers)
      ch)))
 
 (defn GET [path query]
