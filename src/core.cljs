@@ -17,6 +17,7 @@
   (swap! app-state assoc :route :signup))
 
 (defroute "/login" [query-params]
+  (swap! app-state assoc :query-params query-params)
   (swap! app-state assoc :route :login))
 
 (defroute "*path" [path]

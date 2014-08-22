@@ -79,7 +79,7 @@
    (dom/p nil "Or request a new code:")
    (attached-button owner "b" retry-code "email" email)])
 
-(defn root-component [app-state owner {:keys [code]}]
+(defn root-component [app-state owner]
   (letfn [(get-code [email]
                     (om/set-state! owner :email-address email)
                     (om/set-state! owner :state :sending-email)
@@ -93,14 +93,17 @@
                           )))
           (get-token [code]
                      (om/set-state! owner :state :requesting-token)
-                     (go (let [[status-code token] (<! (request-token code))]
+                     (go (let [[status-code token-with-user] (<! (request-token code))]
                            (<! (async/timeout 1000))
                            (cond
                             (= status-code 200)
                             (do
-                              (print "logged in" token)
-                              (om/update! app-state :token token)
-                              (om/update! app-state :user (token :user))
+                              (let [user (token-with-user :user)
+                                    token (-> token-with-user
+                                              (assoc :idUser (user :id))
+                                              (dissoc :user))]
+                                (om/update! app-state :token token)
+                                (om/update! app-state :user user))
                               (utils/navigate-to "/"))
                             (= status-code 401)
                             (do
@@ -120,7 +123,8 @@
       om/IWillMount
       (will-mount
        [_]
-       (when-not (nil? code)
+       (when-let [code (-> app-state :query-params :code)]
+         (om/transact! app-state :query-params #(dissoc % :code))
          (get-token code)))
       om/IDidMount (did-mount [_] (focus-input))
       om/IDidUpdate (did-update [_ _ _] (focus-input))
