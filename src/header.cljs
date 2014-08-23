@@ -45,7 +45,7 @@
                                     ; allows the hover state to work on mobile safari
                                     :onTouchStart (fn [e])
                                     :id "socket-status"}
-                       (name (app-state :socket-state))
-                       (dom/div (classes "tooltip")
-                                (status-tooltips (app-state :socket-state)))
-                       )))))
+                       (name (app-state :socket-state)))
+                     (dom/div (classes "tooltip")
+                              (status-tooltips (app-state :socket-state)))
+                     ))))
