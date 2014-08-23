@@ -81,6 +81,8 @@ status-size = 30px
 #header
   height: header-height
   flex()
+  .spacer
+    flex-stretch()
   a
     text-decoration: none
     &:hover
@@ -89,9 +91,9 @@ status-size = 30px
     line-height: header-height
   > .nav-links
     a
+      display: inline-block
       line-height: header-height
   > h1
-    flex-stretch()
     font-weight: normal
     font-size: 16pt
     > a
@@ -144,3 +146,10 @@ textarea, input[type=text], input[type=email]
     &::after
       content: "→"
     flex-fixed()
+
+#alert
+  display: block
+  color: text-color
+  text-decoration: none
+  background-color: #fd0
+  text-align: center

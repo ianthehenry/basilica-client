@@ -36,6 +36,7 @@
   (om/component
    (dom/div #js {:id "header"}
             (dom/h1 nil (dom/a #js {:href (utils/site-url)} "Basilica"))
+            (dom/div (classes "spacer"))
             (apply dom/div
                    (classes "nav-links")
                    (if (and (app-state :token) (app-state :user))

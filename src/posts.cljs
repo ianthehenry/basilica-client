@@ -199,6 +199,9 @@
      [_]
      (if (app-state :loaded)
        (dom/div nil
+                (if-not (app-state :token)
+                  (dom/a #js {:id "alert"
+                              :href (utils/site-url "signup")} "Basilica has accounts now!"))
                 (om/build header/component app-state)
                 (om/build components/root-post-component
                           app-state
