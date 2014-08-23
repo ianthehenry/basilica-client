@@ -177,8 +177,8 @@
   (reify
     om/IInitState
     (init-state [_] {:on-stop identity})
-    om/IDidMount
-    (did-mount
+    om/IWillMount
+    (will-mount
      [_]
      (let [[status-ch delta-ch stop-fn]
            (listen-to-sockets (partial load-data app-state)
