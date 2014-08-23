@@ -66,7 +66,7 @@
 
 (defn render-post-header [post]
   (dom/div (classes "header")
-           (dom/span (classes "by") (post :by))
+           (dom/span (classes "by") (-> post :user :name))
            " "
            (dom/a #js {:href (utils/site-url (post :id))
                        :tabIndex -1}
@@ -120,7 +120,11 @@
        (dom/div (classes "post" (if expanded "expanded" "collapsed"))
                 (dom/div (classes "this-post")
                          (dom/div (classes "gutter")
-                                  (dom/div (classes "avatar"))
+                                  (dom/div (classes "face")
+                                           ; IMPLICIT COUPLING! If the CSS changes...
+                                           (dom/img #js {:src (str "https://www.gravatar.com/avatar/"
+                                                                   (-> post :user :face :gravatar)
+                                                                   "?s=24&d=retro")}))
                                   (let [child-count (post :count)
                                         text (if expanded "-" (if (= child-count 0) "+" (str child-count)))]
                                     (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)}
