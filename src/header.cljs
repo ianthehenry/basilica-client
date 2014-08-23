@@ -18,7 +18,7 @@
             (dom/span #js {:dangerouslySetInnerHTML #js {:__html "&nbsp;-&nbsp;"}})
             (dom/a (with-classes {:href (utils/site-url "signup")}
                      "nav-link")
-                   "get in on this")
+                   "sign up")
             (dom/div (with-classes {; implicit coupling alert!
                                     ; allows the hover state to work on mobile safari
                                     :onTouchStart (fn [e])
