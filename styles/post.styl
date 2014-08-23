@@ -19,9 +19,9 @@
 
 .toggle-button
   background-color: code-color
-  &:hover
+  &:hover:not(:disabled)
     background-color: darken(code-color, 10%)
-  &:active
+  &:active:not(:disabled)
     background-color: darken(code-color, 20%)
 
 .header

@@ -199,9 +199,9 @@
      [_]
      (if (app-state :loaded)
        (dom/div nil
-                (om/build header/component (app-state :socket-state))
+                (om/build header/component app-state)
                 (om/build components/root-post-component
-                          (app-state :posts)
+                          app-state
                           {:opts {:post-ch (om/get-state owner :post-ch)}}))
        (dom/div (with-classes {:id "loading"}
                   (name (app-state :socket-state))))))))

@@ -87,6 +87,9 @@ status-size = 30px
       text-decoration: underline
   > *
     line-height: header-height
+  > .nav-links
+    a
+      line-height: header-height
   > h1
     flex-stretch()
     font-weight: normal
@@ -102,19 +105,20 @@ status-size = 30px
 button
   color: darken(line-color, 30%)
   border: solid 1px line-color
-  background-color: #fff
   outline: none
-  &:focus:not(:active)
+  &:not(:disabled)
+    cursor: pointer
+  &:focus:not(:active):not(:disabled)
     border-color: highlight-color
     &:hover
       border-color: darken(highlight-color, 10%)
     &:active
       border-color: darken(highlight-color, 20%)
-  &:hover
+  &:hover:not(:disabled)
     color: darken(line-color, 40%)
     border-color: darken(line-color, 10%)
     background-color: code-color
-  &:active
+  &:active:not(:disabled)
     color: darken(line-color, 50%)
     border-color: darken(line-color, 20%)
     background-color: darken(code-color, 10%)
@@ -135,6 +139,7 @@ textarea, input[type=text], input[type=email]
     flex-stretch()
     border-right: none
   button
+    background-color: #fff
     font-size: 10pt
     &::after
       content: "→"

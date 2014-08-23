@@ -11,7 +11,7 @@
       initial-user (if (nil? user-entry) nil (unjsonify user-entry))]
 
   (def app-state (atom {:posts #{}
-                        :users (if (nil? initial-user) #{} #{initial-user})
+                        :user initial-user
                         :latest-post nil
                         :loaded false
                         :token initial-token

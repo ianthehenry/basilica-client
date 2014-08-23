@@ -89,32 +89,35 @@
     (when-not (= text "")
       (put! post-ch {:id-parent id-parent :text text}))))
 
-(defn render-post-children [post-ch id-parent all-posts]
-  (let [build-child (fn [{id-child :id}]
+(defn render-post-children [post-ch id-parent app-state]
+  (let [all-posts (app-state :posts)
+        build-child (fn [{id-child :id}]
                       (om/build post-component
-                                [id-child all-posts]
+                                [id-child app-state]
                                 {:react-key id-child
                                  :opts {:post-ch post-ch}}))
         children (->> all-posts
                       (select #(= (% :idParent) id-parent))
                       (sort-by :id >))]
     (apply dom/div (classes "children")
-           (om/build add-post-component
-                     (make-submit-handler post-ch id-parent))
+           (if (app-state :token)
+             (om/build add-post-component
+                       (make-submit-handler post-ch id-parent)))
            (map build-child children))))
 
-(defn root-post-component [posts owner {:keys [post-ch]}]
+(defn root-post-component [app-state owner {:keys [post-ch]}]
   (om/component
-   (render-post-children post-ch nil posts)))
+   (render-post-children post-ch nil app-state)))
 
-(defn post-component [[id-post posts] owner {:keys [post-ch]}]
+(defn post-component [[id-post app-state] owner {:keys [post-ch]}]
   (reify
     om/IInitState
     (init-state [_] {:expanded false})
     om/IRenderState
     (render-state
      [_ {:keys [expanded]}]
-     (let [post (->> posts
+     (let [all-posts (app-state :posts)
+           post (->> all-posts
                      (select #(= (% :id) id-post))
                      first)]
        (dom/div (classes "post" (if expanded "expanded" "collapsed"))
@@ -126,13 +129,17 @@
                                                                    (-> post :user :face :gravatar)
                                                                    "?s=24&d=retro")}))
                                   (let [child-count (post :count)
-                                        text (if expanded "-" (if (= child-count 0) "+" (str child-count)))]
-                                    (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)}
+                                        text (if expanded "-" (if (= child-count 0)
+                                                                (if (app-state :token) "+" "0")
+                                                                (str child-count)))]
+                                    (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)
+                                                               :disabled (and (= child-count 0)
+                                                                              (nil? (app-state :token)))}
                                                   "toggle-button")
                                                 text)))
                          (dom/div (classes "alley")
                                   (render-post-header post)
                                   (render-post-body post)))
                 (if expanded
-                  (render-post-children post-ch (post :id) posts)))
+                  (render-post-children post-ch (post :id) app-state)))
        ))))

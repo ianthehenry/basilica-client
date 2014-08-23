@@ -49,6 +49,9 @@
                 (map (fn [[k v]] [(name k) v]))
                 form-data)))
 
+(defn DELETE [path]
+  (request "DELETE" path))
+
 (defn connect! [uri]
   (let [on-connect (chan)]
     (let [from-server (chan) to-server (chan) ws (js/WebSocket. uri)]

@@ -51,6 +51,7 @@
 (defn awaiting-code [email next owner]
   [(dom/h1 nil "Email sent")
    (dom/p nil "Probably. If " email " was a real account, anyway.")
+   (dom/p nil "Note that Mandrill can be really shitty sometimes, so don't panic if it takes a few minutes to arrive.")
    (dom/p nil "Enter the code below:")
    (attached-button owner "a" next "text")])
 
