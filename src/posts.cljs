@@ -165,8 +165,8 @@
 (defn upload-posts [post-ch get-username]
   (go-loop
    []
-   (when-let [{:keys [text post]} (<! post-ch)]
-     (let [[code res] (<! (POST (utils/api-url "posts" (:id post))
+   (when-let [{:keys [text id-parent]} (<! post-ch)]
+     (let [[code res] (<! (POST (utils/api-url "posts" id-parent)
                                 {:by (get-username) :content text}))]
        (if (= code 200)
          (print "created post: " res)
