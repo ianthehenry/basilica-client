@@ -27,13 +27,6 @@
 (defn request-token [code]
   (POST (utils/api-url "tokens") {:code code}))
 
-; states:
-; - showing the email input
-; - posting the email
-; - email sent, awaiting code
-; - have a code, requesting a token
-; - got a token, redirecting to the homepage
-
 (defn attached-button
   ([owner ref-name on-submit type] (attached-button owner ref-name on-submit type ""))
   ([owner ref-name on-submit type text]
@@ -46,7 +39,7 @@
                                                   #(om/get-node owner ref-name))}))))
 
 (defn awaiting-email [next owner]
-  [(dom/h1 nil "Well met, friend")
+  [(dom/h1 nil "Well met, internet friend")
    (dom/p nil "What did you say your email address was?")
    (attached-button owner "a" next "email")])
 
@@ -84,7 +77,6 @@
                     (om/set-state! owner :email-address email)
                     (om/set-state! owner :state :sending-email)
                     (go (let [[status-code _] (<! (request-code email))]
-                          (<! (async/timeout 1000))
                           (om/set-state! owner
                                          :state
                                          (if (= status-code 200)
@@ -94,7 +86,6 @@
           (get-token [code]
                      (om/set-state! owner :state :requesting-token)
                      (go (let [[status-code token-with-user] (<! (request-token code))]
-                           (<! (async/timeout 1000))
                            (cond
                             (= status-code 200)
                             (do
