@@ -26,8 +26,8 @@
   ([method url] (request method url nil))
   ([method url data]
    (let [ch (chan 1)
-         token (@app-state :token)
-         headers nil #_ (if token #js {"X-Token" token} nil)]
+         token (-> @app-state :token :token)
+         headers (if (nil? token) nil #js {:X-Token token})]
      (xhr/send url (callback ch) method data headers)
      ch)))
 
