@@ -81,6 +81,10 @@ status-size = 30px
 #header
   height: header-height
   flex()
+  a
+    text-decoration: none
+    &:hover
+      text-decoration: underline
   > *
     line-height: header-height
   > h1
@@ -90,7 +94,6 @@ status-size = 30px
     > a
       padding: indent-size
       display: block
-      text-decoration: none
       color: text-color
 
 @import "socket-status"
@@ -118,15 +121,6 @@ button
 
 @import "loading"
 @import "auth"
-
-#username-picker
-  padding: 0 indent-size
-  padding-bottom: indent-size * 0.5
-  input
-    font-size: 10pt
-    height: line-height
-    vertical-align: top
-    padding: 0 0.5em
 
 textarea, input[type=text], input[type=email]
   outline: none

@@ -13,7 +13,6 @@
   (def app-state (atom {:posts #{}
                         :users (if (nil? initial-user) #{} #{initial-user})
                         :latest-post nil
-                        :username "anon"
                         :loaded false
                         :token initial-token
                         :socket-state :disconnected})))

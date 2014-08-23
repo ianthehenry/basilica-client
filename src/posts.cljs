@@ -3,7 +3,8 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [basilica.utils :as utils :refer [with-classes]]
+   [basilica.utils :as utils :refer [classes with-classes]]
+   [basilica.header :as header]
    [basilica.net :refer [GET connect! POST]]
    [basilica.post-components :as components]
    [clojure.set :refer [select union]]
@@ -172,15 +173,6 @@
          (print "failed to create post with code:" code "response:" res)))
      (recur))))
 
-(defn username-component [app-state owner]
-  (om/component
-   (dom/div #js {:id "username-picker"}
-            "post as: "
-            (dom/input #js {:type "text"
-                            :value (app-state :username)
-                            :onChange #(om/update! app-state :username (.. % -target -value))
-                            }))))
-
 (defn app-component [app-state owner]
   (reify
     om/IInitState
@@ -196,7 +188,7 @@
        (absorb-incoming-posts app-state delta-ch)
        (om/set-state! owner :on-stop stop-fn)
        (om/set-state! owner :post-ch post-ch)
-       (upload-posts post-ch #(@app-state :username))))
+       (upload-posts post-ch #(-> @app-state :user :name))))
     om/IWillUnmount
     (will-unmount
      [_]
@@ -207,8 +199,7 @@
      [_]
      (if (app-state :loaded)
        (dom/div nil
-                (om/build components/header-component (app-state :socket-state))
-                (om/build username-component app-state)
+                (om/build header/component (app-state :socket-state))
                 (om/build components/root-post-component
                           (app-state :posts)
                           {:opts {:post-ch (om/get-state owner :post-ch)}}))

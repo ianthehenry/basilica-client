@@ -132,26 +132,3 @@
                 (if expanded
                   (render-post-children post-ch (post :id) posts)))
        ))))
-
-(def status-tooltips {:disconnected "reconnecting..."
-                      :connected "you are one with the server"
-                      :error "tell ian quick"})
-
-(defn header-component [socket-state owner]
-  (om/component
-   (dom/div #js {:id "header"}
-            (dom/h1 nil (dom/a #js {:href (utils/site-url)} "Basilica"))
-            (dom/a (with-classes {:href (utils/site-url "login")}
-                     "nav-link")
-                   "log in")
-            (dom/a (with-classes {:href (utils/site-url "signup")}
-                     "nav-link")
-                   "get in on this")
-            (dom/div (with-classes {; implicit coupling alert!
-                                    ; allows the hover state to work on mobile safari
-                                    :onTouchStart (fn [e])
-                                    :id "socket-status"}
-                       (name socket-state))
-                     (dom/div (classes "tooltip")
-                              (status-tooltips socket-state)))
-            )))
