@@ -17,11 +17,11 @@
                              "Basilica is currently "
                              (dom/em nil "invite only")
                              ".")
+                     (dom/p nil (str
+                            "This is partly to give an air of exclusivity, but mostly because I don't want to bother "
+                            "writing an interface for creating accounts when it's only gonna happen like five times."))
                      (dom/p nil
-                            "This is partly to give an air of exclusivity, but mostly because there is no concept of accounts, "
-                            "logging in, signing up, invites, or anything else yet. This page only exists so I can test the router.")
-                     (dom/p nil
-                            "Fortunately for you, you can interact with all aspects of basilica in anonymous mode!"))
+                            "If you ask Ian for an account he'll give you one. Just gimme your preferred email address and username."))
 
             (dom/a #js {:href (utils/site-url)} "return to a life you thought you understood")
             )))
