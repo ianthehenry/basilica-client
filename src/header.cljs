@@ -19,7 +19,7 @@
           "sign up")])
 
 (defn signed-in [app-state]
-  [(dom/span nil "signed in as " (-> app-state :user :name))
+  [(dom/span nil (-> app-state :user :name))
    (dom/span #js {:dangerouslySetInnerHTML #js {:__html "&nbsp;-&nbsp;"}})
    (dom/a #js {:href "#"
                :onClick (fn [e]
