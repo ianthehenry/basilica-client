@@ -112,14 +112,21 @@
 (defn post-component [[id-post app-state] owner {:keys [post-ch]}]
   (reify
     om/IInitState
-    (init-state [_] {:expanded false})
+    (init-state [_] {:expanded-preference nil})
     om/IRenderState
     (render-state
-     [_ {:keys [expanded]}]
+     [_ {:keys [expanded-preference]}]
      (let [all-posts (app-state :posts)
            post (->> all-posts
                      (select #(= (% :id) id-post))
-                     first)]
+                     first)
+           child-count (post :count)
+           has-children (> child-count 0)
+           implicitly-expanded has-children
+           expanded (if (nil? expanded-preference)
+                      implicitly-expanded
+                      expanded-preference)
+           is-authed (not (nil? (app-state :token)))]
        (dom/div (classes "post" (if expanded "expanded" "collapsed"))
                 (dom/div (classes "this-post")
                          (dom/div (classes "gutter")
@@ -128,13 +135,13 @@
                                            (dom/img #js {:src (str "https://www.gravatar.com/avatar/"
                                                                    (-> post :user :face :gravatar)
                                                                    "?s=24&d=retro")}))
-                                  (let [child-count (post :count)
-                                        text (if expanded "-" (if (= child-count 0)
-                                                                (if (app-state :token) "+" "0")
-                                                                (str child-count)))]
-                                    (dom/button (with-classes {:onClick #(om/update-state! owner :expanded not)
-                                                               :disabled (and (= child-count 0)
-                                                                              (nil? (app-state :token)))}
+                                  (let [text (if expanded "-"
+                                                          (if has-children
+                                                            (str child-count)
+                                                            (if is-authed "+" "0")))]
+                                    (dom/button (with-classes {:onClick #(om/set-state! owner :expanded-preference (not expanded))
+                                                               :disabled (and (not has-children)
+                                                                              (not is-authed))}
                                                   "toggle-button")
                                                 text)))
                          (dom/div (classes "alley")
