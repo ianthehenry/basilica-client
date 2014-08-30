@@ -128,7 +128,7 @@
                      first)
            child-count (post :count)
            has-children (> child-count 0)
-           implicitly-expanded has-children
+           implicitly-expanded (and (post :idParent) has-children)
            expanded (if (nil? expanded-preference)
                       implicitly-expanded
                       expanded-preference)
