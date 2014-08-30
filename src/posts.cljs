@@ -201,7 +201,7 @@
        (dom/div nil
                 (if-not (app-state :token)
                   (dom/a #js {:id "alert"
-                              :href (utils/site-url "signup")} "Basilica has accounts now!"))
+                              :href (utils/site-url "signup")} "The sign up page works now!"))
                 (om/build header/component app-state)
                 (om/build components/root-post-component
                           app-state
