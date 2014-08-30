@@ -8,7 +8,7 @@ indent-size = spacing
 line-color = #ccc
 code-color = #eee
 text-color = #333
-alley-inset = 0.3em
+alley-inset = spacing * 0.5
 highlight-color = #5af
 gutter-size = line-height
 
@@ -59,7 +59,7 @@ code
 .children .children
   guide-width = 2px
   margin-left: (gutter-size - guide-width) * 0.5
-  padding-left: (gutter-size - guide-width) * 0.5
+  padding-left: (gutter-size - guide-width) * 0.5 + alley-inset
   border-left: solid guide-width #ddd
 
 .children
