@@ -105,7 +105,9 @@
                (om/build add-post-component
                          (make-submit-handler post-ch id-parent))
                (dom/a (with-classes {:href "#"
-                                     :onClick #(om/update! app-state :id-post-commenting id-parent)}
+                                     :onClick (fn [e]
+                                                (om/update! app-state :id-post-commenting id-parent)
+                                                (.preventDefault e))}
                              "add-placeholder") "comment")))
            (map build-child children))))
 
