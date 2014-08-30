@@ -101,8 +101,12 @@
                       (sort-by :id >))]
     (apply dom/div (classes "children")
            (if (app-state :token)
-             (om/build add-post-component
-                       (make-submit-handler post-ch id-parent)))
+             (if (= (app-state :id-post-commenting) id-parent)
+               (om/build add-post-component
+                         (make-submit-handler post-ch id-parent))
+               (dom/a (with-classes {:href "#"
+                                     :onClick #(om/update! app-state :id-post-commenting id-parent)}
+                             "add-placeholder") "comment")))
            (map build-child children))))
 
 (defn root-post-component [app-state owner {:keys [post-ch]}]
@@ -139,7 +143,10 @@
                                                           (if has-children
                                                             (str child-count)
                                                             (if is-authed "+" "0")))]
-                                    (dom/button (with-classes {:onClick #(om/set-state! owner :expanded-preference (not expanded))
+                                    (dom/button (with-classes {:onClick #(do
+                                                                           (om/set-state! owner :expanded-preference (not expanded))
+                                                                           (when (not expanded)
+                                                                             (om/update! app-state :id-post-commenting id-post)))
                                                                :disabled (and (not has-children)
                                                                               (not is-authed))}
                                                   "toggle-button")

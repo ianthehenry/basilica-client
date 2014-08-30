@@ -13,6 +13,7 @@
   (def app-state (atom {:posts #{}
                         :user initial-user
                         :latest-post nil
+                        :id-post-commenting nil
                         :loaded false
                         :token initial-token
                         :socket-state :disconnected})))
