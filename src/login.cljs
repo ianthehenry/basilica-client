@@ -21,12 +21,6 @@
     (let [textarea (get-textarea)]
       (on-submit (. textarea -value)))))
 
-(defn request-code [email]
-  (POST (utils/api-url "codes") {:email email}))
-
-(defn request-token [code]
-  (POST (utils/api-url "tokens") {:code code}))
-
 (defn attached-button
   ([owner ref-name on-submit type] (attached-button owner ref-name on-submit type ""))
   ([owner ref-name on-submit type text]
@@ -37,6 +31,12 @@
                             :onKeyDown (key-down on-submit)})
             (dom/button #js {:onClick (mouse-down on-submit
                                                   #(om/get-node owner ref-name))}))))
+
+(defn request-code [email]
+  (POST (utils/api-url "codes") {:email email}))
+
+(defn request-token [code]
+  (POST (utils/api-url "tokens") {:code code}))
 
 (defn awaiting-email [next owner]
   [(dom/h1 nil "Well met, internet friend")
@@ -131,7 +131,7 @@
                  :bad-code (partial bad-code email-address get-code get-token)
                  :error error} state)]
 
-         (dom/div (classes "auth")
+         (dom/div (classes "auth login")
                   (apply dom/div
                          (classes "message")
                          (f owner))
