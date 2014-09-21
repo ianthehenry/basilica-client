@@ -104,10 +104,9 @@
              (if (= (app-state :id-post-commenting) id-parent)
                (om/build add-post-component
                          (make-submit-handler post-ch id-parent))
-               (dom/a (with-classes {:href "#"
-                                     :onClick (fn [e]
-                                                (om/update! app-state :id-post-commenting id-parent)
-                                                (.preventDefault e))}
+               (dom/button (with-classes {:onClick (fn [e]
+                                                     (om/update! app-state :id-post-commenting id-parent)
+                                                     (.preventDefault e))}
                              "add-placeholder") "comment")))
            (map build-child children))))
 
