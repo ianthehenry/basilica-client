@@ -1,6 +1,6 @@
 (ns basilica.utils
   (:require [basilica.conf :as conf]
-            [secretary.core :as secretary :include-macros true :refer [defroute]]
+            [secretary.core :as secretary :refer-macros [defroute]]
             [goog.events :as events]
             [goog.history.EventType :as EventType]
             [clojure.string :as string])
@@ -14,11 +14,6 @@
 (def api-url (partial url conf/api-host conf/api-path))
 (def site-url (partial url conf/site-host conf/site-path))
 (def ws-url (partial url conf/ws-host conf/ws-path))
-
-(def site-hist-prefix
-  (if (= conf/site-base [])
-    "/"
-    (string/join "/" (concat [""] conf/site-base [""]))))
 
 (enable-console-print!)
 

@@ -1,11 +1,11 @@
 (defproject basilica-client "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2280"]
+                 [org.clojure/clojurescript "0.0-2740"]
                  [om "0.7.1"]
-                 [org.clojure/core.async "0.1.319.0-6b1aca-alpha"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [secretary "1.2.0"]
                  ]
-  :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]]
+  :plugins [[lein-cljsbuild "1.0.4"]]
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src" "conf/dev"]
                         :compiler {:output-to "out/dev/main.js"

@@ -5,7 +5,7 @@
    [om.dom :as dom :include-macros true]
    [basilica.utils :as utils :refer [classes]]
    [basilica.net :refer [POST]]
-   [basilica.post-components :as components]
+   [basilica.components :as components]
    [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]))
 
@@ -101,7 +101,7 @@
                             (do
                               (print "bad code")
                               (om/set-state! owner :state :bad-code))
-                            :else (om/set-state owner :state :error))
+                            :else (om/set-state! owner :state :error))
                            )))
           (focus-input []
                        (let [node (om/get-node owner)

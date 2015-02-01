@@ -6,7 +6,7 @@
    [basilica.utils :as utils :refer [classes with-classes]]
    [basilica.header :as header]
    [basilica.net :refer [GET connect! POST]]
-   [basilica.post-components :as components]
+   [basilica.components :as components]
    [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]))
 

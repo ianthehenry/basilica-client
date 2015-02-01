@@ -1,4 +1,5 @@
 (ns basilica.core
+  (:require-macros [secretary.core :refer [defroute]])
   (:require
    [om.core :as om :include-macros true]
    [clojure.string :as string]
@@ -7,7 +8,6 @@
    [basilica.posts :as posts]
    [basilica.signup :as signup]
    [basilica.login :as login]
-   [secretary.core :as secretary :include-macros true :refer [defroute]]
    [cljs.core.async :as async]))
 
 (defn path-from [s]
