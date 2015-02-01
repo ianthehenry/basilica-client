@@ -2,8 +2,7 @@
   "name": "Basilica",
   "dependencies": {
     "momentjs": "=2.8.1",
-    "marked": "=0.3.2",
-    "react": "=0.11.1"
+    "marked": "=0.3.2"
   },
   "overrides": {
     "marked": {
