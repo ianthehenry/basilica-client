@@ -10,10 +10,9 @@
       initial-token (if (nil? token-entry) nil (unjsonify token-entry))
       initial-user (if (nil? user-entry) nil (unjsonify user-entry))]
 
-  (def app-state (atom {:posts #{}
+  (def app-state (atom {:posts {}
                         :user initial-user
                         :latest-post nil
-                        :root-post {:id nil :children []}
                         :id-post-commenting nil
                         :loaded false
                         :token initial-token

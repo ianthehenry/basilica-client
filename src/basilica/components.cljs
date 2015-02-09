@@ -89,9 +89,12 @@
     (when-not (= text "")
       (put! post-ch {:id-parent id-parent :text text}))))
 
+(defn get-all-posts [app-state]
+  (-> app-state :posts vals set))
+
 (defn render-post-children [post-ch parent app-state]
   (let [id-parent (:id parent)
-        all-posts (app-state :posts)
+        all-posts (get-all-posts app-state)
         build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child app-state]
@@ -113,7 +116,7 @@
 
 (defn root-post-component [app-state owner {:keys [post-ch]}]
   (om/component
-   (render-post-children post-ch (:root-post app-state) app-state)))
+   (render-post-children post-ch (-> app-state :posts (get nil)) app-state)))
 
 (defn post-component [[id-post app-state] owner {:keys [post-ch]}]
   (reify
@@ -122,7 +125,7 @@
     om/IRenderState
     (render-state
      [_ {:keys [expanded-preference]}]
-     (let [all-posts (app-state :posts)
+     (let [all-posts (get-all-posts app-state)
            post (->> all-posts
                      (select #(= (% :id) id-post))
                      first)

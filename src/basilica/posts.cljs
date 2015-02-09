@@ -73,9 +73,13 @@
   (GET (utils/api-url "posts")
        (if (nil? latest) nil {:after latest})))
 
+(defn set-to-id-hash [models]
+  (apply hash-map (mapcat (fn [model] [(:id model) model]) models)))
+
 (defn load-initial-data [cursor res]
   (doto cursor
-    (om/update! :posts (apply hash-set res))
+    (om/update! :posts (set-to-id-hash res))
+    (om/transact! :posts #(assoc % nil {:idParent "temporary never thing" :id nil :children []}))
     (om/update! :latest-post (-> res first :id))
     (om/update! :loaded true)))
 
