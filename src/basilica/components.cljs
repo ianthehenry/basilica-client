@@ -89,8 +89,9 @@
     (when-not (= text "")
       (put! post-ch {:id-parent id-parent :text text}))))
 
-(defn render-post-children [post-ch id-parent app-state]
-  (let [all-posts (app-state :posts)
+(defn render-post-children [post-ch parent app-state]
+  (let [id-parent (:id parent)
+        all-posts (app-state :posts)
         build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child app-state]
@@ -112,7 +113,7 @@
 
 (defn root-post-component [app-state owner {:keys [post-ch]}]
   (om/component
-   (render-post-children post-ch nil app-state)))
+   (render-post-children post-ch (:root-post app-state) app-state)))
 
 (defn post-component [[id-post app-state] owner {:keys [post-ch]}]
   (reify
@@ -156,5 +157,5 @@
                                   (render-post-header post)
                                   (render-post-body post)))
                 (if expanded
-                  (render-post-children post-ch (post :id) app-state)))
+                  (render-post-children post-ch post app-state)))
        ))))

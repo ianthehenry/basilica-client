@@ -13,6 +13,7 @@
   (def app-state (atom {:posts #{}
                         :user initial-user
                         :latest-post nil
+                        :root-post {:id nil :children []}
                         :id-post-commenting nil
                         :loaded false
                         :token initial-token
