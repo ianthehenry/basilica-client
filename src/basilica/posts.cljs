@@ -19,14 +19,13 @@
 (defn inc-child-count [post]
   (update-in post [:count] inc))
 
-(defn parent-of-pred [post]
-  #(= (% :id) (post :idParent)))
-
 (defn add-post [current-posts post]
-  (let [update-parent (if (nil? (post :idParent))
+  (let [parent-id (post :idParent)
+        update-parent (if (or (nil? parent-id)
+                              (not (contains? current-posts parent-id)))
                         identity
-                        #(update-set % (parent-of-pred post) inc-child-count))]
-    (-> current-posts (conj post) update-parent)))
+                        #(update-in % [parent-id] inc-child-count))]
+    (-> current-posts (assoc (post :id) post) update-parent)))
 
 (def log (partial utils/logger :websockets))
 
