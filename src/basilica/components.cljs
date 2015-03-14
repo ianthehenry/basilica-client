@@ -92,6 +92,9 @@
 (defn get-all-posts [app-state]
   (-> app-state :posts vals set))
 
+(defn contains-origin-of-time [post-set]
+  (some #(= 1 (% :id)) post-set))
+
 (defn render-post-children [post-ch parent app-state]
   (let [id-parent (:id parent)
         all-posts (get-all-posts app-state)
@@ -102,7 +105,10 @@
                                  :opts {:post-ch post-ch}}))
         children (->> all-posts
                       (select #(= (% :idParent) id-parent))
-                      (sort-by :id >))]
+                      (sort-by :id >))
+        has-more (if (nil? id-parent)
+                   (not (contains-origin-of-time all-posts))
+                   (< (count children) (parent :count)))]
     (apply dom/div (classes "children")
            (if (app-state :token)
              (if (= (app-state :id-post-commenting) id-parent)
@@ -112,7 +118,10 @@
                                                      (om/update! app-state :id-post-commenting id-parent)
                                                      (.preventDefault e))}
                              "add-placeholder") "comment")))
-           (map build-child children))))
+           (lazy-cat
+             (map build-child children)
+             (if has-more
+               [(dom/button (classes "load-more") "Load more")])))))
 
 (defn root-post-component [app-state owner {:keys [post-ch]}]
   (om/component
