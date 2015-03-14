@@ -10,12 +10,6 @@
    [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]))
 
-(defn update-set [s pred f]
-  (let [x (first (select pred s))]
-    (-> s
-        (disj x)
-        (conj (f x)))))
-
 (defn inc-child-count [post]
   (update-in post [:count] inc))
 
