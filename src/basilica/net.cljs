@@ -10,10 +10,11 @@
    ))
 
 (defn get-response [res]
-  (if (= (.getResponseHeader res "Content-Type")
-         "application/json")
-    (-> res .getResponseJson js->clj keywordize-keys)
-    (.getResponseText res)))
+  (let [content-type (.getResponseHeader res "Content-Type")]
+    (if (and (not (nil? content-type))
+             (.startsWith content-type "application/json"))
+      (-> res .getResponseJson js->clj keywordize-keys)
+      (.getResponseText res))))
 
 (defn callback [ch]
   (fn [event]
