@@ -10,16 +10,29 @@
    [clojure.set :refer [select union]]
    [cljs.core.async :as async :refer [<!]]))
 
-(defn inc-child-count [post]
-  (update-in post [:count] inc))
-
 (defn add-post [current-posts post]
   (let [parent-id (post :idParent)
-        update-parent (if (or (nil? parent-id)
-                              (not (contains? current-posts parent-id)))
+        add-child #(update-in % [:children] conj (post :id))
+        update-parent (if (not (contains? current-posts parent-id))
                         identity
-                        #(update-in % [parent-id] inc-child-count))]
-    (-> current-posts (assoc (post :id) post) update-parent)))
+                        #(update-in % [parent-id] add-child))]
+    (-> current-posts
+      (assoc (post :id) (assoc post :children []))
+      update-parent)))
+
+(defn add-new-post [current-posts post]
+  (let [parent-id (post :idParent)
+        add-child #(update-in % [:children] conj (post :id))
+        inc-child-count #(update-in % [:count] inc)
+        update-parent (if (not (contains? current-posts parent-id))
+                        identity
+                        #(update-in % [parent-id] (comp inc-child-count add-child)))]
+    (-> current-posts
+      (assoc (post :id)
+        (-> post
+          (assoc :children [])
+          (assoc :count 0)))
+      update-parent)))
 
 (def log (partial utils/logger :websockets))
 
@@ -75,19 +88,19 @@
 (defn load-before [oldest]
   (GET (utils/api-url "posts") {:before oldest}))
 
-(defn set-to-id-hash [models]
-  (apply hash-map (mapcat (fn [model] [(:id model) model]) models)))
-
 (defn load-initial-data [cursor res]
   (doto cursor
-    (om/update! :posts (set-to-id-hash res))
-    (om/transact! :posts #(assoc % nil {:idParent "temporary never thing" :id nil}))
+    (om/update! :posts {nil {:idParent "temporary never thing"
+                             :id nil
+                             :children []
+                             :count 0}})
+    (om/transact! :posts #(reduce add-post % (reverse res)))
     (om/update! :latest-post (-> res first :id))
     (om/update! :loaded true)))
 
 (defn load-more-data [cursor res]
   (doto cursor
-    (om/transact! :posts #(reduce add-post % res))
+    (om/transact! :posts #(reduce add-new-post % (reverse res)))
     (om/transact! :latest-post #(-> res first :id (safe-max %)))))
 
 (defn load-data [cursor res]
@@ -162,7 +175,7 @@
   (go-loop
    []
    (when-let [post (<! delta-ch)]
-     (om/transact! cursor :posts #(add-post % post))
+     (om/transact! cursor :posts #(add-new-post % post))
      (om/transact! cursor :latest-post #(safe-max % (post :id)))
      (when-not (js/document.hasFocus)
        (set-unread-stuff!))
