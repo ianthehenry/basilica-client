@@ -62,9 +62,18 @@
       (apply max filtered)
       nil)))
 
+(defn safe-min [& args]
+  (let [filtered (filter (complement nil?) args)]
+    (if (seq filtered)
+      (apply min filtered)
+      nil)))
+
 (defn posts-request [latest]
   (GET (utils/api-url "posts")
        (if (nil? latest) nil {:after latest})))
+
+(defn load-before [oldest]
+  (GET (utils/api-url "posts") {:before oldest}))
 
 (defn set-to-id-hash [models]
   (apply hash-map (mapcat (fn [model] [(:id model) model]) models)))
@@ -202,6 +211,12 @@
                 (om/build header/component app-state)
                 (om/build components/root-post-component
                           app-state
-                          {:opts {:post-ch (om/get-state owner :post-ch)}}))
+                          {:opts {:post-ch (om/get-state owner :post-ch)
+                                  :load-more (fn []
+                                    (go
+                                      (let [oldest (->> (@app-state :posts) keys (apply safe-min))
+                                            [code res] (<! (load-before oldest))]
+                                          (load-data app-state res))))
+                                  }}))
        (dom/div (with-classes {:id "loading"}
                   (name (app-state :socket-state))))))))

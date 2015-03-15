@@ -95,20 +95,18 @@
 (defn contains-origin-of-time [post-set]
   (some #(= 1 (% :id)) post-set))
 
-(defn render-post-children [post-ch parent app-state]
+(defn render-post-children [post-ch load-more parent app-state]
   (let [id-parent (:id parent)
         all-posts (get-all-posts app-state)
         build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child app-state]
                                 {:react-key id-child
-                                 :opts {:post-ch post-ch}}))
+                                 :opts {:post-ch post-ch :load-more load-more}}))
         children (->> all-posts
                       (select #(= (% :idParent) id-parent))
                       (sort-by :id >))
-        has-more (if (nil? id-parent)
-                   (not (contains-origin-of-time all-posts))
-                   (< (count children) (parent :count)))]
+        has-more (and (nil? id-parent) (not (contains-origin-of-time all-posts)))]
     (apply dom/div (classes "children")
            (if (app-state :token)
              (if (= (app-state :id-post-commenting) id-parent)
@@ -121,13 +119,15 @@
            (lazy-cat
              (map build-child children)
              (if has-more
-               [(dom/button (classes "load-more") "Load more")])))))
+               [(dom/button (with-classes {:onClick load-more}
+                              "load-more")
+                  "Load more")])))))
 
-(defn root-post-component [app-state owner {:keys [post-ch]}]
+(defn root-post-component [app-state owner {:keys [post-ch load-more]}]
   (om/component
-   (render-post-children post-ch (-> app-state :posts (get nil)) app-state)))
+   (render-post-children post-ch load-more (-> app-state :posts (get nil)) app-state)))
 
-(defn post-component [[id-post app-state] owner {:keys [post-ch]}]
+(defn post-component [[id-post app-state] owner {:keys [post-ch load-more]}]
   (reify
     om/IInitState
     (init-state [_] {:expanded-preference nil})
@@ -169,5 +169,5 @@
                                   (render-post-header post)
                                   (render-post-body post)))
                 (if expanded
-                  (render-post-children post-ch post app-state)))
+                  (render-post-children post-ch load-more post app-state)))
        ))))
