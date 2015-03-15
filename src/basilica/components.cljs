@@ -89,24 +89,20 @@
     (when-not (= text "")
       (put! post-ch {:id-parent id-parent :text text}))))
 
-(defn get-all-posts [app-state]
-  (-> app-state :posts vals set))
-
 (defn contains-origin-of-time [post-set]
   (some #(= 1 (% :id)) post-set))
 
 (defn render-post-children [post-ch load-more parent app-state]
   (let [id-parent (:id parent)
-        all-posts (get-all-posts app-state)
         build-child (fn [{id-child :id}]
                       (om/build post-component
                                 [id-child app-state]
                                 {:react-key id-child
                                  :opts {:post-ch post-ch :load-more load-more}}))
-        children (->> all-posts
-                      (select #(= (% :idParent) id-parent))
+        children (->> (parent :children)
+                      (map (app-state :posts))
                       (sort-by :id >))
-        has-more (and (nil? id-parent) (not (contains-origin-of-time all-posts)))]
+        has-more (and (nil? id-parent) (not (contains-origin-of-time children)))]
     (apply dom/div (classes "children")
            (if (app-state :token)
              (if (= (app-state :id-post-commenting) id-parent)
@@ -134,10 +130,7 @@
     om/IRenderState
     (render-state
      [_ {:keys [expanded-preference]}]
-     (let [all-posts (get-all-posts app-state)
-           post (->> all-posts
-                     (select #(= (% :id) id-post))
-                     first)
+     (let [post ((app-state :posts) id-post)
            child-count (post :count)
            has-children (> child-count 0)
            implicitly-expanded (and (post :idParent) has-children)
