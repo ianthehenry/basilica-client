@@ -78,13 +78,13 @@
 (defn load-initial-data [cursor res]
   (doto cursor
     (om/update! :posts (set-to-id-hash res))
-    (om/transact! :posts #(assoc % nil {:idParent "temporary never thing" :id nil :children []}))
+    (om/transact! :posts #(assoc % nil {:idParent "temporary never thing" :id nil}))
     (om/update! :latest-post (-> res first :id))
     (om/update! :loaded true)))
 
 (defn load-more-data [cursor res]
   (doto cursor
-    (om/transact! :posts #(union % (apply hash-set res)))
+    (om/transact! :posts #(reduce add-post % res))
     (om/transact! :latest-post #(-> res first :id (safe-max %)))))
 
 (defn load-data [cursor res]
