@@ -1,6 +1,6 @@
 # What is this
 
-It's the first [Basilica](https://github.com/ianthehenry/basilica) client!
+It's the first [Basilica](https://github.com/ianthehenry/basilica) client! You can see a live demo running at https://basilica.horse.
 
 # For hacking
 
