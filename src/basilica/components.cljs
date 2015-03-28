@@ -143,9 +143,12 @@
                          (dom/div (classes "gutter")
                                   (dom/div (classes "face")
                                            ; IMPLICIT COUPLING! If the CSS changes...
-                                           (dom/img #js {:src (str "https://www.gravatar.com/avatar/"
-                                                                   (-> post :user :face :gravatar)
-                                                                   "?s=24&d=retro")}))
+                                           (let [gravatar #(str "https://www.gravatar.com/avatar/"
+                                                                (-> post :user :face :gravatar)
+                                                                "?s=" % "&d=retro")]
+                                             (dom/img #js {:srcSet (str (gravatar 24) " 1x"
+                                                                        ","
+                                                                        (gravatar 48) " 2x")})))
                                   (let [text (if expanded "-"
                                                           (if has-children
                                                             (str child-count)
