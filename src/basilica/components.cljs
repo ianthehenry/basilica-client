@@ -123,6 +123,11 @@
   (om/component
    (render-post-children post-ch load-more (-> app-state :posts (get nil)) app-state)))
 
+(defn count-post-children [db post]
+  (let [children (map (db :posts) (post :children))]
+    (reduce + 0 (->> children (map (fn [child]
+      (inc (count-post-children db child))))))))
+
 (defn post-component [[id-post app-state] owner {:keys [post-ch load-more]}]
   (reify
     om/IInitState
@@ -131,7 +136,7 @@
     (render-state
      [_ {:keys [expanded-preference]}]
      (let [post ((app-state :posts) id-post)
-           child-count (post :count)
+           child-count (count-post-children app-state post)
            has-children (> child-count 0)
            implicitly-expanded (and (post :idParent) has-children)
            expanded (if (nil? expanded-preference)
