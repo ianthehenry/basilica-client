@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+case $1 in
+  .) http-file static/dev/index.html;;
+  ./main.css) node_modules/.bin/stylus -p styles/main.styl | http-response "text/css; charset=utf-8";;
+  ./vendor.js) cat node_modules/{moment/moment.js,marked/lib/marked.js} | http-response "application/json; charset=utf-8";;
+  *)
+    if [ -e "static/dev/$1" ]; then
+      http-file "static/dev/$1"
+    else
+      http-file "out/dev/$1"
+    fi
+esac

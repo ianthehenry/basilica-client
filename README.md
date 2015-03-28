@@ -4,26 +4,19 @@ It's the first [Basilica](https://github.com/ianthehenry/basilica) client! You c
 
 # For hacking
 
-You'll need `bower`, `npm`, and `brunch`.
+You'll need some dependencies. You can grab them with homebrew and [homebrew cask](https://github.com/caskroom/homebrew-cask):
 
-    $ brew install node
-    $ npm install -g bower brunch
+    $ brew install node ncat leiningen
+    $ brew cask install java
 
-Then put `/usr/local/share/npm/bin` on your PATH, if it isn't already.
-
-I also recommend `terminal-notifier`, but it's not strictly required:
-
-    $ brew install terminal-notifier
-
-You also need ClojureScript:
-
-    $ brew install leiningen
+Then grab [`httprintf`](https://github.com/ianthehenry/httprintf) and put it on your PATH.
 
 Now you can install the client dependencies:
 
-    $ npm install --dev
-    $ bower install
+    $ npm install
 
-And you're done!
+And you're done! You can start leiningen (for live recompiling) and the dev server (for actually serving files) like this:
 
-Start `lein cljsbuild auto dev`, then start `brunch watch --server`, and navigate to `localhost:3333`. Ta-da!
+    $ ./start
+
+Ta-da!

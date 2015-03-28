@@ -21,7 +21,9 @@
                                    :optimizations :advanced
                                    :pretty-print false
                                    :output-wrapper false
-                                   :preamble ["momentjs/min/moment.min.js" "marked/lib/marked.js"]
-                                   :externs ["momentjs/moment.js" "marked/lib/marked.js"]
+                                   :preamble ["moment/min/moment.min.js"
+                                              "marked/marked.min.js"]
+                                   :externs ["moment/moment.js"
+                                             "marked/lib/marked.js"]
                                    :closure-warnings {:externs-validation :off
                                                       :non-standard-jsdoc :off}}}]})

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+lein cljsbuild auto dev &
+ncat -kl localhost 3333 -c http-handler

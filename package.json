@@ -2,10 +2,11 @@
   "name": "Basilica",
   "description": "A basilica client",
   "version": "0.0.1",
-  "dependencies": {},
+  "dependencies": {
+    "marked": "^0.3.3",
+    "moment": "^2.9.0"
+  },
   "devDependencies": {
-    "stylus-brunch": "^1.8.0",
-    "javascript-brunch": "^1.7.1",
-    "auto-reload-brunch": "^1.7.3"
+    "stylus": "^0.50.0"
   }
 }
