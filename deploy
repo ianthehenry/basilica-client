@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+buildroot="./builds"
+remotehost="tiberius"
+remotedir="/data/www/basilicae"
+
+rm -rf out/prod
+lein cljsbuild once prod
+
+version=$(ssh "$remotehost" "ls '$remotedir'" | wc -l | sed -e 's/^ *//')
+
+localdir="$buildroot/$version"
+mkdir "$localdir"
+
+./GET ./main.css GET | sed $'1,/^\r$/d' > "$localdir/main.css"
+cp out/prod/main.js static/prod/* "$localdir"
+
+for filepath in $(find $localdir -type file -not -name 'index.html'); do
+  name=$(basename "$filepath")
+  ext="${name##*.}"
+  name="${name%.*}"
+  checksum=$(md5 -q "$filepath")
+
+  newname="$name.$checksum.$ext"
+  sed -i "" "s#\"/static/$name\\.$ext\"#\"/static/$newname\"#" "$localdir/index.html"
+
+  mv "$filepath" "$(dirname "$filepath")/$newname"
+done
+
+remotedir="$remotedir/$version"
+ssh "$remotehost" "mkdir '$remotedir'"
+scp "$localdir"/* "$remotehost:$remotedir"
+
+echo "successfully released version $version"

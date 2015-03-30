@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+if [ -z ${1+x} ]; then
+  echo "must specify version" >&2
+  exit 1
+else
+  version="$1"
+fi
+
+remotehost="tiberius"
+remotedir="/data/www"
+path="basilicae/$version"
+
+script="
+set -e
+cd '$remotedir'
+rm -f basilica.horse.new
+if [ -d '$path' ]; then
+  ln -s '$path' basilica.horse.new
+  mv basilica.horse{.new,}
+else
+  exit 1
+fi
+"
+
+if ssh "$remotehost" "$script"; then
+  :
+else
+  echo "failed to switch to version $version" >&2
+  exit 1
+fi
