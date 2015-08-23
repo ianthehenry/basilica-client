@@ -53,9 +53,12 @@ code
   background-color: code-color
   padding: 0 0.2em
   white-space: pre
+  display: inline-block
 
 :not(pre) > code
-  white-space: nowrap
+  word-wrap: break-word
+  max-width: 100%
+  line-height: line-height
 
 .markdown
   @import "markdown"

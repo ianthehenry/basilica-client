@@ -82,6 +82,23 @@
 (set! (.-image renderer) (fn [href title text]
   (this-as self (js/marked.Renderer.prototype.image.call self (sslify href) title text))))
 
+(defn escape [str]
+  (string/escape str {\< "&lt;"
+                      \> "&gt;"
+                      \& "&amp;"
+                      \" "&quot;"
+                      \' "&#39;"}))
+
+(defn wraptag [tag inner]
+  (str "<" tag ">" inner "</" tag ">"))
+
+(set! (.-code renderer) (fn [code]
+  (->> (string/split code #"\n")
+    (map escape)
+    (map (partial wraptag "code"))
+    (string/join "")
+    (wraptag "pre"))))
+
 (. js/marked setOptions #js {:sanitize true
                              :renderer renderer})
 
