@@ -72,7 +72,18 @@
                        :tabIndex -1}
                   (format (post :at)))))
 
-(. js/marked setOptions #js {:sanitize true})
+(defn sslify [url]
+  (-> url
+    string/trim
+    (string/replace-first #"^\s*\w+://|^" "https://")))
+
+(def renderer (new js/marked.Renderer))
+
+(set! (.-image renderer) (fn [href title text]
+  (this-as self (js/marked.Renderer.prototype.image.call self (sslify href) title text))))
+
+(. js/marked setOptions #js {:sanitize true
+                             :renderer renderer})
 
 (defn markdown [text]
   (dom/div #js {:className "markdown"
