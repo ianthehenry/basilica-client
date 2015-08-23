@@ -17,7 +17,7 @@ cd '$remotedir'
 rm -f basilica.horse.new
 if [ -d '$path' ]; then
   ln -s '$path' basilica.horse.new
-  mv basilica.horse{.new,}
+  mv -T basilica.horse{.new,}
 else
   exit 1
 fi
