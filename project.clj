@@ -1,11 +1,11 @@
 (defproject basilica-client "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.48"]
-                 [org.omcljs/om "0.8.7"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojurescript "1.8.40"]
+                 [org.omcljs/om "0.8.8"]
+                 [org.clojure/core.async "0.2.374"]
                  [secretary "1.2.3"]
                  ]
-  :plugins [[lein-cljsbuild "1.0.4"]]
+  :plugins [[lein-cljsbuild "1.1.3"]]
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src" "conf/dev"]
                         :compiler {:main basilica.core
@@ -13,7 +13,7 @@
                                    :output-dir "out/dev"
                                    :asset-path "http://localhost:3333"
                                    :optimizations :none
-                                   :source-map "out/dev/main.js.map"}}
+                                   :source-map true}}
                        {:id "prod"
                         :source-paths ["src" "conf/prod"]
                         :compiler {:output-to "out/prod/main.js"
