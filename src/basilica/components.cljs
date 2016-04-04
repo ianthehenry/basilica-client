@@ -52,7 +52,7 @@
                  (.addEventListener js/window "resize" resize-listener)
                  (om/set-state! owner :resize-listener resize-listener)))
     om/IWillUnmount
-    (will-unmount [_] (.removeEventListener js/window (om/get-state owner :resize-listener)))
+    (will-unmount [_] (.removeEventListener js/window "resize" (om/get-state owner :resize-listener)))
     om/IRender
     (render
      [_]
