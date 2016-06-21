@@ -50,17 +50,17 @@
 
 (defn root-component [app-state owner]
   (letfn [(get-user [email username]
-                    (om/update-state! owner conj {:email email
-                                                  :username username
-                                                  :state :loading})
+                    (om/update-state! owner #(conj % {:email email
+                                                      :username username
+                                                      :state :loading}))
                     (go (let [[status-code response] (<! (request-user email username))]
                           (if (= status-code 200)
                             (om/set-state! owner :state :account-created)
-                            (om/update-state! owner conj {:state :awaiting-input
-                                                          :error (case status-code
-                                                                   409 "username or email already taken"
-                                                                   400 "invalid username"
-                                                                   "unknown error")}))
+                            (om/update-state! owner #(conj % {:state :awaiting-input
+                                                              :error (case status-code
+                                                                       409 "username or email already taken"
+                                                                       400 "invalid username"
+                                                                       "unknown error")})))
                           )))
           (focus-input []
                        (let [node (om/get-node owner)
