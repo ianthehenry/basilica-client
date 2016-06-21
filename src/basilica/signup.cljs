@@ -53,7 +53,7 @@
   (letfn [(get-user [email username]
                     (om/update-state! owner conj {:email email
                                                   :username username
-                                                  :state loading})
+                                                  :state :loading})
                     (go (let [[status-code response] (<! (request-user email username))]
                           (if (= status-code 200)
                             (om/set-state! owner :state :account-created)
