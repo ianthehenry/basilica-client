@@ -43,8 +43,7 @@
 
 (defn account-created [email owner]
   [(dom/h1 nil "It is done")
-   (dom/p nil "There is no going back. We've sent an email to " email " with a link you can use to log in.")
-   (dom/p nil "It may take a little while to arrive because Mandrill is pretty flaky.")])
+   (dom/p nil "There is no going back. We've sent an email to " email " with a link you can use to log in.")])
 
 (defn request-user [email username]
   (POST (utils/api-url "users") {:email email :name username}))
